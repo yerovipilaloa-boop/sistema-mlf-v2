@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1a237e">
+    <title>Mi Dashboard - MLF</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/dashboard-pichincha.css" rel="stylesheet">
+</head>
+
+<body class="pichincha-style">
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay"
+        style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.95);display:flex;align-items:center;justify-content:center;z-index:9999;">
+        <div class="spinner-border text-primary" style="width:3rem;height:3rem;"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar-pichincha">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <span class="navbar-brand">💰 MLF</span>
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-link text-white p-0" onclick="actualizarDashboard()" title="Actualizar datos">
+                    🔄
+                </button>
+                <button class="btn btn-link text-white p-0 position-relative" onclick="toggleNotifications()">
+                    🔔<span class="badge bg-danger position-absolute" id="notificationBadge"
+                        style="top:-5px;right:-8px;font-size:0.65rem;display:none;">0</span>
+                </button>
+                <span class="user-info d-none d-md-block" id="navUsuario">Cargando...</span>
+                <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Notification Dropdown -->
+    <div id="notificationDropdown" class="position-fixed bg-white shadow rounded-3"
+        style="top:60px;right:1rem;width:320px;max-height:400px;display:none;z-index:1050;">
+        <div class="p-3 border-bottom d-flex justify-content-between">
+            <strong>Notificaciones</strong>
+            <button class="btn btn-sm btn-link" onclick="marcarTodasLeidas()">Marcar leídas</button>
+        </div>
+        <div id="notificationList" style="max-height:280px;overflow-y:auto;"></div>
+    </div>
+
+    <div class="container-fluid py-3" style="max-width:1200px;">
+
+        <!-- HERO CARD: MIS AHORROS -->
+        <div class="hero-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <div class="card-label">💰 MIS AHORROS</div>
+                    <div class="card-value" id="ahorroTotal">$ 0.00</div>
+                </div>
+                <span class="badge bg-light text-dark" id="etapaBadge">Etapa 1</span>
+            </div>
+
+            <div class="card-detail">
+                <span>Comprometido en Créditos</span>
+                <strong id="comprometidoCreditos" style="color: #ffc107;">$ 0.00</strong>
+            </div>
+            <div class="card-detail">
+                <span>Congelado (Garantías)</span>
+                <strong id="ahorroCongelado">$ 0.00</strong>
+            </div>
+
+            <!-- Balance Neto - Indicador Principal -->
+            <div id="balanceNetoContainer" class="card-detail"
+                style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.2);">
+                <span style="font-weight: 600;">Balance Neto</span>
+                <strong id="balanceNeto" style="font-size: 1.1rem;">$ 0.00</strong>
+            </div>
+
+            <!-- Mensaje de Estado (Deuda o Disponible) -->
+            <div id="estadoBalanceContainer"
+                style="margin-top: 0.5rem; padding: 0.5rem; border-radius: 8px; font-size: 0.85rem; display: none;">
+                <span id="estadoBalanceMensaje"></span>
+            </div>
+
+            <!-- Detalle de Garantías Congeladas -->
+            <div id="garantiasDetalleContainer"
+                style="display:none;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.2);">
+                <div style="font-size:0.75rem;opacity:0.8;margin-bottom:0.5rem;">📋 Detalle del ahorro comprometido:
+                </div>
+                <div id="garantiasDetalleList" style="font-size:0.8rem;"></div>
+            </div>
+
+
+        </div>
+
+        <!-- ACCIONES RÁPIDAS -->
+        <div class="quick-actions">
+            <h3>⚡ ¿Qué quieres hacer?</h3>
+            <div class="actions-grid">
+
+                <button class="action-item success" onclick="hacerDeposito()">
+                    <span class="icon">💵</span>
+                    <span class="label">Depositar</span>
+                </button>
+                <button class="action-item warning" onclick="hacerRetiro()">
+                    <span class="icon">💰</span>
+                    <span class="label">Retirar</span>
+                </button>
+                <button class="action-item info" onclick="verCalculadora()">
+                    <span class="icon">🧮</span>
+                    <span class="label">Simular Crédito</span>
+                </button>
+                <button class="action-item secondary" onclick="verHistorial()">
+                    <span class="icon">📊</span>
+                    <span class="label">Historial</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- COLUMNA IZQUIERDA -->
+            <div class="col-lg-8">
+
+                <!-- MIS CRÉDITOS -->
+                <div class="info-card">
+                    <div class="card-header-custom">
+                        <span class="icon">💳</span>
+                        <h4>Mis Créditos</h4>
+                        <span class="badge bg-primary" id="creditosCount">0</span>
+                    </div>
+                    <div id="creditosContainer">
+                        <p class="text-center text-muted py-3">Cargando créditos...</p>
+                    </div>
+                </div>
+
+                <!-- PRÓXIMAS CUOTAS -->
+                <div class="info-card">
+                    <div class="card-header-custom">
+                        <span class="icon">📅</span>
+                        <h4>Próximas Cuotas</h4>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0" style="font-size:0.85rem;">
+                            <thead style="background:#f5f5f5;">
+                                <tr>
+                                    <th>Crédito</th>
+                                    <th>Cuota</th>
+                                    <th>Vencimiento</th>
+                                    <th class="text-end">Monto</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaCuotas">
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">Cargando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- HISTORIAL -->
+                <div class="info-card" id="historialCard">
+                    <div class="card-header-custom">
+                        <span class="icon">📊</span>
+                        <h4>Historial Reciente</h4>
+                    </div>
+                    <div id="historialLista">
+                        <p class="text-center text-muted py-3">Cargando...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA -->
+            <div class="col-lg-4">
+
+                <!-- UTILIDADES -->
+                <div class="info-card">
+                    <div class="card-header-custom">
+                        <span class="icon">🎁</span>
+                        <h4>Mis Utilidades</h4>
+                    </div>
+
+                    <div class="alert alert-info py-2 mb-3" style="font-size:0.8rem;">
+                        <strong>¿Cómo funcionan?</strong><br>
+                        Recibes el <strong>1% semestral</strong> sobre el promedio de tus ahorros de los últimos 6
+                        meses.
+                    </div>
+
+                    <!-- Tabla de Saldos Mensuales -->
+                    <div id="utilidadesTablaContainer" style="display:none;">
+                        <table class="utilities-table">
+                            <thead>
+                                <tr>
+                                    <th>Mes</th>
+                                    <th class="text-end">Saldo Fin de Mes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="utilidadesTablaBody"></tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td>Promedio Semestre</td>
+                                    <td class="text-end" id="utilidadPromedio">$ 0.00</td>
+                                </tr>
+                                <tr class="total-row" style="background:#c8e6c9;">
+                                    <td><strong>Utilidad Proyectada (1%)</strong></td>
+                                    <td class="text-end"><strong id="utilidadProyectada">$ 0.00</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="mt-3 pt-3 border-top" style="font-size:0.85rem;">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Total Recibido:</span>
+                            <strong id="utilidadesTotales">$ 0.00</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>📅 Próxima distribución:</span>
+                            <strong id="proximaUtilidad">-</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GARANTÍAS -->
+                <div class="info-card">
+                    <div class="card-header-custom">
+                        <span class="icon">🔒</span>
+                        <h4>Estado de Garantías</h4>
+                    </div>
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <div style="font-size:0.8rem;color:#666;">Otorgadas</div>
+                            <div id="garantiasOtorgadasCount" style="font-size:1.5rem;font-weight:700;color:#ff9800;">0
+                            </div>
+                            <div style="font-size:0.75rem;" id="garantiasOtorgadasMonto">$ 0.00</div>
+                        </div>
+                        <div class="col-6">
+                            <div style="font-size:0.8rem;color:#666;">Recibidas</div>
+                            <div id="garantiasRecibidasCount" style="font-size:1.5rem;font-weight:700;color:#4caf50;">0
+                            </div>
+                            <div style="font-size:0.75rem;" id="garantiasRecibidasMonto">$ 0.00</div>
+                        </div>
+                    </div>
+                    <div id="garantiasLista" style="font-size:0.85rem;"></div>
+                </div>
+
+                <!-- RESUMEN CRÉDITOS -->
+                <div class="info-card">
+                    <div class="card-header-custom">
+                        <span class="icon">📈</span>
+                        <h4>Resumen de Pagos</h4>
+                    </div>
+                    <div style="font-size:0.9rem;">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Total Prestado:</span>
+                            <strong id="totalPrestado">$ 0.00</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Total Pagado:</span>
+                            <strong class="text-success" id="totalPagado">$ 0.00</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Saldo Capital:</span>
+                            <strong class="text-primary" id="saldoCapital">$ 0.00</strong>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between">
+                            <span>💡 Para Liquidar Hoy:</span>
+                            <strong class="text-danger" id="saldoPendiente">$ 0.00</strong>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height:8px;">
+                        <div class="progress-bar bg-success" id="progressPagos" style="width:0%"></div>
+                    </div>
+                    <div class="text-center mt-1" style="font-size:0.75rem;color:#666;">
+                        <span id="porcentajePagado">0%</span> completado
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Tabla de Amortización -->
+    <div class="modal fade modal-amortization" id="modalAmortizacion" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">📋 Tabla de Amortización - <span id="amortCreditoCodigo">CRE-XXX</span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3" style="font-size:0.9rem;">
+                        <div class="col-4"><strong>Monto:</strong> <span id="amortMonto">$0</span></div>
+                        <div class="col-4"><strong>Tasa:</strong> <span id="amortTasa">1.5%</span>/mes</div>
+                        <div class="col-4"><strong>Plazo:</strong> <span id="amortPlazo">0</span> meses</div>
+                    </div>
+                    <div class="table-responsive" style="max-height:400px;overflow-y:auto;">
+                        <table class="table table-sm table-amort">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Vencimiento</th>
+                                    <th class="text-end">Capital</th>
+                                    <th class="text-end">Interés</th>
+                                    <th class="text-end">Cuota</th>
+                                    <th class="text-end">Saldo Capital</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="amortTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Simulador de Crédito -->
+    <div class="modal fade" id="modalSimulador" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="modal-title">🧮 Simulador de Crédito</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 mb-3">
+                        <small>Calcula cuánto pagarías mensualmente antes de solicitar tu crédito. Tasa: <strong>1.5%
+                                mensual</strong>.</small>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Monto a solicitar ($)</strong></label>
+                            <input type="number" class="form-control" id="simMonto" value="500" min="100" step="100"
+                                oninput="calcularSimulacion()">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Plazo (meses)</strong></label>
+                            <input type="number" class="form-control" id="simPlazo" value="12" min="1" max="36" step="1"
+                                oninput="calcularSimulacion()">
+                            <small class="text-muted">De 1 a 36 meses</small>
+                        </div>
+                    </div>
+
+                    <!-- Resultados -->
+                    <div class="card mt-3" style="background: #f8f9fa;">
+                        <div class="card-body">
+                            <h6 class="card-title">📊 Resultado de la Simulación</h6>
+
+                            <!-- Desglose del monto -->
+                            <div class="row mb-3" style="font-size:0.85rem;">
+                                <div class="col-6">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Monto solicitado:</span>
+                                        <strong id="simMontoSolic">$ 0.00</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between text-info">
+                                        <span>+ Seguro desgravamen (1%):</span>
+                                        <strong id="simSeguro">$ 0.00</strong>
+                                    </div>
+                                    <hr class="my-1">
+                                    <div class="d-flex justify-content-between">
+                                        <span><strong>Monto a financiar:</strong></span>
+                                        <strong id="simMontoFinanciar" style="color:#1a237e;">$ 0.00</strong>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Total intereses:</span>
+                                        <strong id="simTotalInteres" class="text-danger">$ 0.00</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Total a pagar:</span>
+                                        <strong id="simTotalPagar" style="color:#ff9800;">$ 0.00</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cuota mensual destacada -->
+                            <div class="text-center py-2 mb-3"
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;">
+                                <div style="font-size:0.8rem;opacity:0.9;">Cuota Mensual</div>
+                                <div id="simCuotaMensual" style="font-size:2rem;font-weight:700;">$ 0.00</div>
+                            </div>
+
+                            <!-- Tabla de amortización simplificada -->
+                            <div class="table-responsive" style="max-height:200px;overflow-y:auto;">
+                                <table class="table table-sm mb-0" style="font-size:0.8rem;">
+                                    <thead style="background:#e9ecef;position:sticky;top:0;">
+                                        <tr>
+                                            <th>#</th>
+                                            <th class="text-end">Capital</th>
+                                            <th class="text-end">Interés</th>
+                                            <th class="text-end">Cuota</th>
+                                            <th class="text-end">Saldo Capital</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="simTablaAmort"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="solicitarDesdeSim()">💳 Solicitar Este
+                        Crédito</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include existing modals from original dashboard -->
+    <!-- Modal: Solicitar Crédito -->
+    <div class="modal fade" id="modalSolicitarCredito" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">💳 Solicitar Nuevo Crédito</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="infoLimiteCredito" class="alert alert-info mb-3">Cargando información...</div>
+                    <form id="formSolicitarCredito">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Monto a Solicitar ($)</label>
+                                <input type="number" class="form-control" id="creditoMonto" required min="100"
+                                    step="100">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Plazo (meses)</label>
+                                <input type="number" class="form-control" id="creditoPlazo" value="12" min="1" max="36"
+                                    step="1" required>
+                                <small class="text-muted">De 1 a 36 meses</small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Sistema de Amortización</label>
+                                <select class="form-select" id="creditoMetodo">
+                                    <option value="FRANCES" selected>Francés (cuotas iguales)</option>
+                                    <option value="ALEMAN">Alemán (capital fijo)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Propósito</label>
+                                <select class="form-select" id="creditoProposito" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="NEGOCIO">Negocio</option>
+                                    <option value="EDUCACION">Educación</option>
+                                    <option value="SALUD">Salud</option>
+                                    <option value="PERSONAL">Personal</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="previaCuotaCredito" class="alert alert-success" style="display:none;">
+                            <strong>Cuota Mensual:</strong> <span id="cuotaEstimada">$0</span>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnEnviarCredito"
+                        onclick="enviarSolicitudCredito()">Enviar
+                        Solicitud</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Depósito -->
+    <div class="modal fade" id="modalDeposito" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">💵 Solicitar Depósito</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2"><small>Tu solicitud será aprobada por el administrador.</small>
+                    </div>
+                    <form id="formDeposito">
+                        <div class="mb-3">
+                            <label class="form-label">Monto a Depositar ($)</label>
+                            <input type="number" class="form-control" id="depositoMonto" required min="1" step="0.01">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">N° Comprobante (opcional)</label>
+                            <input type="text" class="form-control" id="depositoComprobante">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="enviarSolicitudDeposito()">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Retiro -->
+    <div class="modal fade" id="modalRetiro" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">💰 Solicitar Retiro</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2">
+                        <div class="d-flex justify-content-between">
+                            <span>Disponible:</span><strong id="ahorroDisponibleRetiro">$0</strong>
+                        </div>
+                    </div>
+                    <form id="formRetiro">
+                        <div class="mb-3">
+                            <label class="form-label">Monto a Retirar ($)</label>
+                            <input type="number" class="form-control" id="retiroMonto" required min="1" step="0.01">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning" onclick="enviarSolicitudRetiro()">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Pago - Mejorado con selección de cuotas -->
+    <div class="modal fade" id="modalPago" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">📋 Reportar Pago de Cuota</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2">
+                        <small>💡 Selecciona la cuota que deseas pagar. El administrador verificará tu pago.</small>
+                    </div>
+
+                    <!-- Lista de cuotas próximas a vencer -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">📅 Cuotas Próximas a Vencer</label>
+                        <div id="listaCuotasPendientes" style="max-height: 250px; overflow-y: auto;">
+                            <div class="text-center text-muted py-3">
+                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                                Cargando cuotas...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cuota seleccionada -->
+                    <div id="cuotaSeleccionadaInfo" class="alert alert-success py-2 mb-3" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong id="cuotaSeleccionadaTexto">Cuota seleccionada</strong>
+                            </div>
+                            <div class="text-end">
+                                <span class="fs-4 fw-bold" id="cuotaSeleccionadaMonto">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="formPago">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Monto Pagado ($)</label>
+                                <input type="number" class="form-control form-control-lg" id="montoPago" required
+                                    min="1" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Puedes pagar el monto exacto o un abono parcial</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">N° Comprobante (opcional)</label>
+                                <input type="text" class="form-control" id="comprobantePago"
+                                    placeholder="Ej: TRF-123456">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones (opcional)</label>
+                            <textarea class="form-control" id="observacionesPago" rows="2"
+                                placeholder="Ej: Transferencia desde Banco X"></textarea>
+                        </div>
+
+                        <!-- Campo oculto para guardar cuota seleccionada -->
+                        <input type="hidden" id="cuotaIdSeleccionada" value="">
+                        <input type="hidden" id="creditoIdSeleccionado" value="">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnReportarPago" onclick="enviarSolicitudPago()"
+                        disabled>
+                        💰 Reportar Pago
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav-pichincha">
+        <a href="#" class="nav-item active" onclick="scrollToTop()">
+            <span class="icon">🏠</span><span>Inicio</span>
+        </a>
+        <a href="#" class="nav-item" onclick="verProductos()">
+            <span class="icon">📦</span><span>Productos</span>
+        </a>
+        <a href="#" class="nav-item" onclick="toggleNotifications()">
+            <span class="icon">🔔</span><span>Avisos</span>
+        </a>
+        <a href="#" class="nav-item" onclick="verPerfil()">
+            <span class="icon">👤</span><span>Perfil</span>
+        </a>
+    </nav>
+
+    <!-- Toast Container for Notifications -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1060;" id="toastContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/dashboard-socio.js"></script>
+    <script>
+        // Additional functions for new UI
+        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        function verProductos() { document.getElementById('creditosContainer').scrollIntoView({ behavior: 'smooth' }); }
+        function verPerfil() { alert('Próximamente: Configuración de perfil'); }
+
+        // Simulador de Crédito
+        function verCalculadora() {
+            const modal = new bootstrap.Modal(document.getElementById('modalSimulador'));
+            modal.show();
+            calcularSimulacion(); // Calcular con valores iniciales
+        }
+
+        function calcularSimulacion() {
+            const montoSolicitado = parseFloat(document.getElementById('simMonto').value) || 0;
+            const plazo = parseInt(document.getElementById('simPlazo').value) || 12;
+            const tasaMensual = 0.015; // 1.5% mensual
+            const tasaSeguro = 0.01;   // 1% seguro desgravamen
+
+            if (montoSolicitado <= 0 || plazo <= 0) return;
+
+            // Calcular seguro de desgravamen (1% del monto solicitado)
+            const seguro = montoSolicitado * tasaSeguro;
+            const montoFinanciar = montoSolicitado + seguro;
+
+            // Fórmula de amortización francesa sobre monto + seguro
+            const cuotaMensual = montoFinanciar * (tasaMensual * Math.pow(1 + tasaMensual, plazo)) / (Math.pow(1 + tasaMensual, plazo) - 1);
+            const totalPagar = cuotaMensual * plazo;
+            const totalInteres = totalPagar - montoFinanciar;
+
+            // Mostrar desglose
+            document.getElementById('simMontoSolic').textContent = '$ ' + montoSolicitado.toFixed(2);
+            document.getElementById('simSeguro').textContent = '$ ' + seguro.toFixed(2);
+            document.getElementById('simMontoFinanciar').textContent = '$ ' + montoFinanciar.toFixed(2);
+
+            // Mostrar resultados
+            document.getElementById('simCuotaMensual').textContent = '$ ' + cuotaMensual.toFixed(2);
+            document.getElementById('simTotalPagar').textContent = '$ ' + totalPagar.toFixed(2);
+            document.getElementById('simTotalInteres').textContent = '$ ' + totalInteres.toFixed(2);
+
+            // Generar tabla de amortización sobre monto financiado (monto + seguro)
+            let saldo = montoFinanciar;
+            let html = '';
+            for (let i = 1; i <= plazo; i++) {
+                const interesCuota = saldo * tasaMensual;
+                const capitalCuota = cuotaMensual - interesCuota;
+                saldo -= capitalCuota;
+                if (saldo < 0) saldo = 0;
+
+                html += `<tr>
+                    <td>${i}</td>
+                    <td class="text-end">$ ${capitalCuota.toFixed(2)}</td>
+                    <td class="text-end">$ ${interesCuota.toFixed(2)}</td>
+                    <td class="text-end"><strong>$ ${cuotaMensual.toFixed(2)}</strong></td>
+                    <td class="text-end">$ ${saldo.toFixed(2)}</td>
+                </tr>`;
+            }
+            document.getElementById('simTablaAmort').innerHTML = html;
+        }
+
+        function solicitarDesdeSim() {
+            // Cerrar modal simulador
+            bootstrap.Modal.getInstance(document.getElementById('modalSimulador')).hide();
+
+            // Transferir valores al modal de solicitud
+            const monto = document.getElementById('simMonto').value;
+            const plazo = document.getElementById('simPlazo').value;
+
+            document.getElementById('creditoMonto').value = monto;
+            document.getElementById('creditoPlazo').value = plazo;
+
+            // Abrir modal de solicitud
+            setTimeout(() => solicitarNuevoCredito(), 300);
+        }
+
+        function verHistorial() {
+            document.getElementById('historialCard').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Enhanced credit card rendering
+        function renderizarCreditosNuevo(creditosDetalle) {
+            const container = document.getElementById('creditosContainer');
+            const countBadge = document.getElementById('creditosCount');
+
+            if (!creditosDetalle || creditosDetalle.length === 0) {
+                container.innerHTML = `
+      <div class="text-center py-4">
+        <div style="font-size:3rem;opacity:0.3;">💳</div>
+        <p class="text-muted">No tienes créditos activos</p>
+        <button class="btn btn-primary btn-sm" onclick="solicitarNuevoCredito()">Solicitar mi primer crédito</button>
+      </div>`;
+                countBadge.textContent = '0';
+                return;
+            }
+
+            countBadge.textContent = creditosDetalle.length;
+
+            let html = '';
+            creditosDetalle.forEach(credito => {
+                const estado = credito.estado.toLowerCase();
+                const badgeClass = estado === 'desembolsado' ? 'badge-desembolsado' :
+                    estado === 'aprobado' ? 'badge-aprobado' : 'badge-solicitado';
+                const estadoLabel = estado === 'desembolsado' ? 'Activo' :
+                    estado === 'aprobado' ? 'Aprobado' : 'En Revisión';
+
+                const porcentaje = credito.montoTotal > 0 && credito.saldoCapital !== undefined
+                    ? Math.round(((credito.montoTotal - credito.saldoCapital) / credito.montoTotal) * 100)
+                    : 0;
+
+                html += `
+      <div class="credit-card-item status-${estado}">
+        <div class="credit-header">
+          <span class="credit-code">${credito.codigo}</span>
+          <span class="credit-badge ${badgeClass}">${estadoLabel}</span>
+        </div>
+        <div style="font-size:0.85rem;color:#666;">
+          Monto: <strong>$${credito.montoSolicitado?.toLocaleString() || 0}</strong> | 
+          Plazo: <strong>${credito.plazoMeses} meses</strong>
+        </div>
+        ${estado === 'desembolsado' ? `
+          <div class="progress-bar-mini">
+            <div class="fill" style="width:${porcentaje}%"></div>
+          </div>
+          <div style="font-size:0.8rem;color:#666;">
+            ${porcentaje}% pagado | Saldo: <strong>$${credito.saldoCapital?.toLocaleString() || 0}</strong>
+          </div>
+          <div class="credit-actions">
+            <!-- Botón Ver Amortización (Restaurado) -->
+            <button class="btn btn-outline-primary btn-sm-custom w-100 mb-2" onclick="verAmortizacion(${credito.id})">
+              📋 Ver Amortización
+            </button>
+            <!-- Botón Pagar específico para este crédito -->
+            <button class="btn btn-success btn-sm-custom w-100" onclick="window.mostrarModalPago('${credito.codigo}')">
+              💳 Pagar Cuota
+            </button>
+          </div>
+        ` : ''}
+      </div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Ver tabla de amortización
+        async function verAmortizacion_OLD(creditoId) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE}/creditos/${creditoId}/amortizacion`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Error al cargar amortización');
+
+                const result = await response.json();
+                const data = result.data;
+
+                // Fill modal
+                document.getElementById('amortCreditoCodigo').textContent = data.credito?.codigo || 'CRE-XXX';
+                document.getElementById('amortMonto').textContent = '$' + (data.credito?.montoSolicitado || 0).toLocaleString();
+                document.getElementById('amortTasa').textContent = '1.5';
+                document.getElementById('amortPlazo').textContent = data.cuotas?.length || 0;
+
+                // Build table
+                let html = '';
+                let saldo = data.credito?.montoTotal || 0;
+                (data.cuotas || []).forEach(cuota => {
+                    const rowClass = cuota.estado === 'PAGADA' ? 'row-paid' :
+                        cuota.estado === 'VENCIDA' ? 'row-overdue' : 'row-pending';
+                    const estadoBadge = cuota.estado === 'PAGADA' ? '✅' :
+                        cuota.estado === 'VENCIDA' ? '⚠️' : '⏳';
+
+                    html += `
+        <tr class="${rowClass}">
+          <td>${cuota.numeroCuota}</td>
+          <td>${new Date(cuota.fechaVencimiento).toLocaleDateString('es-EC')}</td>
+          <td class="text-end">$${cuota.monto_capital?.toFixed(2) || '0.00'}</td>
+          <td class="text-end">$${cuota.monto_interes?.toFixed(2) || '0.00'}</td>
+          <td class="text-end"><strong>$${cuota.montoCuota?.toFixed(2) || '0.00'}</strong></td>
+          <td class="text-end">$${cuota.saldo_despues?.toFixed(2) || '0.00'}</td>
+          <td>${estadoBadge}</td>
+        </tr>`;
+                });
+
+                document.getElementById('amortTableBody').innerHTML = html;
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('modalAmortizacion'));
+                modal.show();
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar la tabla de amortización');
+            }
+        }
+
+        // Override original render function to use new credit cards
+        const originalRenderCreditosStatus = window.renderizarCreditosStatus;
+        window.renderizarCreditosStatus = function (creditosDetalle) {
+            renderizarCreditosNuevo(creditosDetalle);
+        };
+
+        // Render guarantee details in hero card
+        function renderizarDetalleGarantiasHero(garantias) {
+            const container = document.getElementById('garantiasDetalleContainer');
+            const list = document.getElementById('garantiasDetalleList');
+
+            if (!garantias || !garantias.otorgadas || garantias.otorgadas.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            let html = '';
+            garantias.otorgadas.forEach(g => {
+                html += `<div style="padding:0.25rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+      → $${g.montoCongelado?.toLocaleString() || 0} para ${g.creditoCodigo} (${g.nombreGarantizado || 'Socio'})
+    </div>`;
+            });
+            list.innerHTML = html;
+        }
+
+        // Hook into dashboard load
+        const originalRenderDashboard = window.renderizarDashboard;
+        if (originalRenderDashboard) {
+            window.renderizarDashboard = function (data) {
+                originalRenderDashboard(data);
+                if (data.garantias) {
+                    renderizarDetalleGarantiasHero(data.garantias);
+                }
+                if (data.creditosDetalle) {
+                    renderizarCreditosNuevo(data.creditosDetalle);
+                }
+            };
+        }
+    </script>
+</body>
+
+</html>

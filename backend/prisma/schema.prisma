@@ -1,0 +1,626 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EstadoSocio {
+  ACTIVO
+  SUSPENDIDO
+  INACTIVO
+}
+
+enum RolSocio {
+  SOCIO
+  TESORERO
+  ADMIN
+}
+
+enum EstadoCredito {
+  SOLICITADO
+  EN_REVISION
+  APROBADO
+  DESEMBOLSADO
+  COMPLETADO
+  CASTIGADO
+  RECHAZADO
+}
+
+enum ClasificacionMora {
+  AL_DIA
+  MORA_LEVE
+  MORA_MODERADA
+  MORA_GRAVE
+  MORA_PERSISTENTE
+  CASTIGADO
+}
+
+enum EstadoGarantia {
+  PENDIENTE
+  ACTIVA
+  EJECUTADA
+  LIBERADA
+}
+
+model Socio {
+  id                                                            Int                  @id @default(autoincrement())
+  codigo                                                        String               @unique @db.VarChar(20)
+  nombreCompleto                                                String               @map("nombre_completo") @db.VarChar(200)
+  documentoIdentidad                                            String               @unique @map("documento_identidad") @db.VarChar(10)
+  fechaNacimiento                                               DateTime             @map("fecha_nacimiento") @db.Date
+  direccion                                                     String
+  ciudad                                                        String               @db.VarChar(100)
+  telefono                                                      String               @db.VarChar(20)
+  email                                                         String               @db.VarChar(200)
+  ahorroActual                                                  Decimal              @default(0) @map("ahorro_actual") @db.Decimal(12, 2)
+  ahorroCongelado                                               Decimal              @default(0) @map("ahorro_congelado") @db.Decimal(12, 2)
+  etapaActual                                                   Int                  @default(1) @map("etapa_actual")
+  creditosEtapaActual                                           Int                  @default(0) @map("creditos_etapa_actual")
+  estado                                                        EstadoSocio          @default(ACTIVO)
+  voto_confianza                                                Boolean?             @default(false)
+  usuario                                                       String?              @unique @db.VarChar(50)
+  passwordHash                                                  String               @map("password_hash") @db.VarChar(255)
+  rol                                                           RolSocio             @default(SOCIO)
+  fechaRegistro                                                 DateTime             @default(now()) @map("fecha_registro") @db.Timestamp(6)
+  createdAt                                                     DateTime             @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt                                                     DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  auditoriasRealizadas                                          Auditoria[]
+  cambios_documento_cambios_documento_aprobado_por_idTosocios   cambios_documento[]  @relation("cambios_documento_aprobado_por_idTosocios")
+  cambios_documento_cambios_documento_socio_idTosocios          cambios_documento[]  @relation("cambios_documento_socio_idTosocios")
+  cambios_documento_cambios_documento_solicitado_por_idTosocios cambios_documento[]  @relation("cambios_documento_solicitado_por_idTosocios")
+  comprobantes_comprobantes_generado_por_idTosocios             Comprobante[]        @relation("comprobantes_generado_por_idTosocios")
+  comprobantes_comprobantes_socio_idTosocios                    Comprobante[]        @relation("comprobantes_socio_idTosocios")
+  configuraciones                                               Configuracion[]
+  creditos                                                      Credito[]
+  dashboard_metricas                                            DashboardMetrica[]
+  fondo_seguro_fondo_seguro_registrado_por_idTosocios           FondoSeguro[]        @relation("fondo_seguro_registrado_por_idTosocios")
+  fondo_seguro_fondo_seguro_socio_idTosocios                    FondoSeguro[]        @relation("fondo_seguro_socio_idTosocios")
+  garantias_garantias_socio_garante_idTosocios                  Garantia[]           @relation("garantias_socio_garante_idTosocios")
+  garantias_garantias_socio_garantizado_idTosocios              Garantia[]           @relation("garantias_socio_garantizado_idTosocios")
+  liberaciones_garantia                                         LiberacionGarantia[]
+  notificaciones_notificaciones_creada_por_idTosocios           Notificacion[]       @relation("notificaciones_creada_por_idTosocios")
+  notificaciones                                                Notificacion[]
+  pagos_pagos_registrado_por_idTosocios                         Pago[]               @relation("pagos_registrado_por_idTosocios")
+  pagos_pagos_socio_idTosocios                                  Pago[]               @relation("pagos_socio_idTosocios")
+  recomendacionesRecibidas                                      Recomendacion[]      @relation("Recomendado")
+  recomendacionesHechas                                         Recomendacion[]      @relation("Recomendador")
+  sesiones                                                      Sesion[]
+  transacciones_transacciones_registrado_por_idTosocios         Transaccion[]        @relation("transacciones_registrado_por_idTosocios")
+  transacciones                                                 Transaccion[]
+  utilidades_utilidades_calculado_por_idTosocios                Utilidad[]           @relation("utilidades_calculado_por_idTosocios")
+  utilidades_utilidades_distribuido_por_idTosocios              Utilidad[]           @relation("utilidades_distribuido_por_idTosocios")
+  utilidades_detalle                                            UtilidadDetalle[]
+  gastosOperativos                                              GastoOperativo[]
+
+  @@index([codigo], map: "idx_socios_codigo")
+  @@index([documentoIdentidad], map: "idx_socios_documento")
+  @@index([email], map: "idx_socios_email")
+  @@index([estado], map: "idx_socios_estado")
+  @@index([etapaActual], map: "idx_socios_etapa")
+  @@map("socios")
+}
+
+model Recomendacion {
+  id                  Int      @id @default(autoincrement())
+  socioRecomendadoId  Int      @map("socio_recomendado_id")
+  socioRecomendadorId Int      @map("socio_recomendador_id")
+  fechaRecomendacion  DateTime @default(now()) @map("fecha_recomendacion") @db.Timestamp(6)
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  socioRecomendado    Socio    @relation("Recomendado", fields: [socioRecomendadoId], references: [id], onUpdate: NoAction)
+  socioRecomendador   Socio    @relation("Recomendador", fields: [socioRecomendadorId], references: [id], onUpdate: NoAction)
+
+  @@unique([socioRecomendadoId, socioRecomendadorId])
+  @@index([socioRecomendadoId], map: "idx_recomendaciones_recomendado")
+  @@index([socioRecomendadorId], map: "idx_recomendaciones_recomendador")
+  @@map("recomendaciones")
+}
+
+model Credito {
+  id                   Int           @id @default(autoincrement())
+  codigo               String        @unique @db.VarChar(20)
+  socioId              Int           @map("socio_id")
+  montoSolicitado      Decimal       @map("monto_solicitado") @db.Decimal(12, 2)
+  primaSeguro          Decimal       @map("prima_seguro") @db.Decimal(12, 2)
+  montoTotal           Decimal       @map("monto_total") @db.Decimal(12, 2)
+  plazoMeses           Int           @map("plazo_meses")
+  tasa_interes_mensual Decimal       @db.Decimal(5, 2)
+  metodoAmortizacion   String        @map("metodo_amortizacion") @db.VarChar(20)
+  cuota_mensual        Decimal          @db.Decimal(12, 2)
+  saldo_capital        Decimal          @db.Decimal(12, 2)
+  estado               EstadoCredito    @default(SOLICITADO)
+  estado_mora          ClasificacionMora?
+  dias_mora            Int?             @default(0)
+  fechaSolicitud       DateTime      @default(now()) @map("fecha_solicitud") @db.Timestamp(6)
+  fechaAprobacion      DateTime?     @map("fecha_aprobacion") @db.Timestamp(6)
+  fechaDesembolso      DateTime?     @map("fecha_desembolso") @db.Timestamp(6)
+  fecha_finalizacion   DateTime?     @db.Timestamp(6)
+  createdAt            DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt            DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  comprobantes         Comprobante[]
+  socio                Socio         @relation(fields: [socioId], references: [id], onUpdate: NoAction)
+  cuotas               Cuota[]
+  fondo_seguro         FondoSeguro[]
+  garantias            Garantia[]
+  moras                Mora[]
+  pagos                Pago[]
+
+  @@index([codigo], map: "idx_creditos_codigo")
+  @@index([estado], map: "idx_creditos_estado")
+  @@index([estado_mora], map: "idx_creditos_estado_mora")
+  @@index([fechaDesembolso], map: "idx_creditos_fecha_desembolso")
+  @@index([socioId], map: "idx_creditos_socio")
+  @@map("creditos")
+}
+
+model Cuota {
+  id                    Int       @id @default(autoincrement())
+  creditoId             Int       @map("credito_id")
+  numeroCuota           Int       @map("numero_cuota")
+  fechaVencimiento      DateTime  @map("fecha_vencimiento") @db.Date
+  montoCuota            Decimal   @map("monto_cuota") @db.Decimal(12, 2)
+  monto_capital         Decimal   @db.Decimal(12, 2)
+  monto_interes         Decimal   @db.Decimal(12, 2)
+  saldo_capital_despues Decimal   @db.Decimal(12, 2)
+  montoPagado           Decimal   @default(0) @map("monto_pagado") @db.Decimal(12, 2)
+  estado                String    @default("PENDIENTE") @db.VarChar(20)
+  diasMora              Int?      @default(0) @map("dias_mora")
+  interes_mora          Decimal?  @default(0) @db.Decimal(12, 2)
+  fechaPago             DateTime? @map("fecha_pago") @db.Timestamp(6)
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  credito               Credito   @relation(fields: [creditoId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  moras                 Mora[]
+  pagos                 Pago[]
+
+  @@unique([creditoId, numeroCuota])
+  @@index([creditoId], map: "idx_cuotas_credito")
+  @@index([estado], map: "idx_cuotas_estado")
+  @@index([fechaVencimiento], map: "idx_cuotas_fecha_vencimiento")
+  @@map("cuotas")
+}
+
+model Pago {
+  id                                     Int           @id @default(autoincrement())
+  codigo                                 String        @unique @db.VarChar(30)
+  creditoId                              Int           @map("credito_id")
+  socioId                                Int           @map("socio_id")
+  cuota_id                               Int?
+  monto_pago                             Decimal       @db.Decimal(12, 2)
+  monto_a_mora                           Decimal?      @default(0) @db.Decimal(12, 2)
+  monto_a_interes                        Decimal?      @default(0) @db.Decimal(12, 2)
+  monto_a_capital                        Decimal?      @default(0) @db.Decimal(12, 2)
+  monto_a_cuota_siguiente                Decimal?      @default(0) @db.Decimal(12, 2)
+  es_abono_capital                       Boolean?      @default(false)
+  tipo_abono                             String?       @db.VarChar(20)
+  comprobante_url                        String?       @db.VarChar(500)
+  metodoPago                             String        @map("metodo_pago") @db.VarChar(50)
+  fechaPago                              DateTime      @default(now()) @map("fecha_pago") @db.Timestamp(6)
+  registrado_por_id                      Int?
+  createdAt                              DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
+  comprobantes                           Comprobante[]
+  credito                                Credito       @relation(fields: [creditoId], references: [id], onUpdate: NoAction)
+  cuotas                                 Cuota?        @relation(fields: [cuota_id], references: [id], onUpdate: NoAction)
+  socios_pagos_registrado_por_idTosocios Socio?        @relation("pagos_registrado_por_idTosocios", fields: [registrado_por_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  socios_pagos_socio_idTosocios          Socio         @relation("pagos_socio_idTosocios", fields: [socioId], references: [id], onUpdate: NoAction)
+
+  @@index([creditoId], map: "idx_pagos_credito")
+  @@index([cuota_id], map: "idx_pagos_cuota")
+  @@index([fechaPago], map: "idx_pagos_fecha")
+  @@index([socioId], map: "idx_pagos_socio")
+  @@map("pagos")
+}
+
+model Mora {
+  id                         Int       @id @default(autoincrement())
+  creditoId                  Int       @map("credito_id")
+  cuota_id                   Int
+  clasificacion              String    @db.VarChar(30)
+  diasMora                   Int       @map("dias_mora")
+  monto_cuota_vencida        Decimal   @db.Decimal(12, 2)
+  interes_mora_acumulado     Decimal   @default(0) @db.Decimal(12, 2)
+  fecha_inicio_mora          DateTime  @db.Date
+  fecha_vencimiento_original DateTime  @db.Date
+  fecha_regularizacion       DateTime? @db.Date
+  estado                     String    @default("ACTIVA") @db.VarChar(20)
+  es_castigado               Boolean?  @default(false)
+  fecha_castigo              DateTime? @db.Timestamp(6)
+  tasa_cambio_castigo        Decimal?  @db.Decimal(5, 2)
+  createdAt                  DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt                  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  credito                    Credito   @relation(fields: [creditoId], references: [id], onUpdate: NoAction)
+  cuotas                     Cuota     @relation(fields: [cuota_id], references: [id], onUpdate: NoAction)
+
+  @@index([clasificacion], map: "idx_moras_clasificacion")
+  @@index([creditoId], map: "idx_moras_credito")
+  @@index([cuota_id], map: "idx_moras_cuota")
+  @@index([estado], map: "idx_moras_estado")
+  @@index([fecha_inicio_mora], map: "idx_moras_fecha_inicio")
+  @@map("moras")
+}
+
+model Garantia {
+  id                                            Int                  @id @default(autoincrement())
+  codigo                                        String               @unique @db.VarChar(20)
+  creditoId                                     Int                  @map("credito_id")
+  socio_garantizado_id                          Int
+  socio_garante_id                              Int
+  montoGarantizado                              Decimal              @map("monto_garantizado") @db.Decimal(12, 2)
+  montoCongelado                                Decimal              @map("monto_congelado") @db.Decimal(12, 2)
+  estado                                        EstadoGarantia       @default(ACTIVA)
+  porcentaje_completado_al_liberar              Int?
+  fechaLiberacion                               DateTime?            @map("fecha_liberacion") @db.Timestamp(6)
+  razon_liberacion                              String?
+  fechaEjecucion                                DateTime?            @map("fecha_ejecucion") @db.Timestamp(6)
+  monto_ejecutado                               Decimal?             @db.Decimal(12, 2)
+  fecha_creacion                                DateTime             @default(now()) @db.Timestamp(6)
+  createdAt                                     DateTime             @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt                                     DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  credito                                       Credito              @relation(fields: [creditoId], references: [id], onUpdate: NoAction)
+  socios_garantias_socio_garante_idTosocios     Socio                @relation("garantias_socio_garante_idTosocios", fields: [socio_garante_id], references: [id], onUpdate: NoAction)
+  socios_garantias_socio_garantizado_idTosocios Socio                @relation("garantias_socio_garantizado_idTosocios", fields: [socio_garantizado_id], references: [id], onUpdate: NoAction)
+  liberaciones                                  LiberacionGarantia[]
+
+  @@index([creditoId], map: "idx_garantias_credito")
+  @@index([estado], map: "idx_garantias_estado")
+  @@index([socio_garante_id], map: "idx_garantias_garante")
+  @@index([socio_garantizado_id], map: "idx_garantias_garantizado")
+  @@map("garantias")
+}
+
+model LiberacionGarantia {
+  id                            Int       @id @default(autoincrement())
+  codigo                        String    @unique @db.VarChar(20)
+  garantiaId                    Int       @map("garantia_id")
+  porcentaje_completado_credito Int
+  comportamiento_evaluado       String?   @db.VarChar(20)
+  moras_ultimos_6_meses         Int?      @default(0)
+  estado                        String    @default("SOLICITADA") @db.VarChar(20)
+  fechaSolicitud                DateTime  @default(now()) @map("fecha_solicitud") @db.Timestamp(6)
+  fecha_decision                DateTime? @db.Timestamp(6)
+  decidido_por_id               Int?
+  razon_decision                String?
+  createdAt                     DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt                     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  socios                        Socio?    @relation(fields: [decidido_por_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  garantia                      Garantia  @relation(fields: [garantiaId], references: [id], onUpdate: NoAction)
+
+  @@index([estado], map: "idx_liberaciones_estado")
+  @@index([garantiaId], map: "idx_liberaciones_garantia")
+  @@map("liberaciones_garantia")
+}
+
+model Transaccion {
+  id                                             Int           @id @default(autoincrement())
+  codigo                                         String        @unique @db.VarChar(30)
+  socioId                                        Int           @map("socio_id")
+  tipo                                           String        @db.VarChar(20)
+  monto                                          Decimal       @db.Decimal(12, 2)
+  saldoAnterior                                  Decimal       @map("saldo_anterior") @db.Decimal(12, 2)
+  saldoNuevo                                     Decimal       @map("saldo_nuevo") @db.Decimal(12, 2)
+  ahorro_disponible_momento                      Decimal?      @db.Decimal(12, 2)
+  validacion_retiro                              Boolean?      @default(true)
+  comprobante_url                                String?       @db.VarChar(500)
+  metodo                                         String        @db.VarChar(50)
+  referencia_externa                             String?       @db.VarChar(100)
+  concepto                                       String?
+  notas                                          String?
+  fechaTransaccion                               DateTime      @default(now()) @map("fecha_transaccion") @db.Timestamp(6)
+  registrado_por_id                              Int?
+  createdAt                                      DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
+  comprobantes                                   Comprobante[]
+  socios_transacciones_registrado_por_idTosocios Socio?        @relation("transacciones_registrado_por_idTosocios", fields: [registrado_por_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  socio                                          Socio         @relation(fields: [socioId], references: [id], onUpdate: NoAction)
+
+  @@index([fechaTransaccion], map: "idx_transacciones_fecha")
+  @@index([socioId], map: "idx_transacciones_socio")
+  @@index([tipo], map: "idx_transacciones_tipo")
+  @@map("transacciones")
+}
+
+model Utilidad {
+  id                                           Int               @id @default(autoincrement())
+  codigo                                       String            @unique @db.VarChar(20)
+  a_o                                          Int               @map("año")
+  semestre                                     Int
+  fechaDistribucion                            DateTime          @default(now()) @map("fecha_distribucion") @db.Timestamp(6)
+  total_socios_activos                         Int
+  total_ahorros_promedio                       Decimal           @db.Decimal(15, 2)
+  total_utilidades_distribuidas                Decimal           @db.Decimal(15, 2)
+  estado                                       String            @default("CALCULADA") @db.VarChar(20)
+  calculadoPorId                               Int?              @map("calculado_por_id")
+  distribuidoPorId                             Int?              @map("distribuido_por_id")
+  fechaCalculo                                 DateTime          @default(now()) @map("fecha_calculo") @db.Timestamp(6)
+  createdAt                                    DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
+  socios_utilidades_calculado_por_idTosocios   Socio?            @relation("utilidades_calculado_por_idTosocios", fields: [calculadoPorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  socios_utilidades_distribuido_por_idTosocios Socio?            @relation("utilidades_distribuido_por_idTosocios", fields: [distribuidoPorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  detalles                                     UtilidadDetalle[]
+
+  @@unique([a_o, semestre])
+  @@index([estado], map: "idx_utilidades_estado")
+  @@index([a_o, semestre], map: "idx_utilidades_periodo")
+  @@map("utilidades")
+}
+
+model UtilidadDetalle {
+  id                       Int       @id @default(autoincrement())
+  utilidadId               Int       @map("utilidad_id")
+  socioId                  Int       @map("socio_id")
+  ahorro_promedio_semestre Decimal   @db.Decimal(12, 2)
+  porcentaje_utilidad      Decimal   @default(1.0) @db.Decimal(5, 2)
+  montoUtilidad            Decimal   @map("monto_utilidad") @db.Decimal(12, 2)
+  estado_socio_momento     String    @db.VarChar(20)
+  etapa_socio_momento      Int
+  fechaAcreditacion        DateTime? @map("fecha_acreditacion") @db.Timestamp(6)
+  acreditada               Boolean?  @default(false)
+  createdAt                DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  socios                   Socio     @relation(fields: [socioId], references: [id], onUpdate: NoAction)
+  utilidad                 Utilidad  @relation(fields: [utilidadId], references: [id], onUpdate: NoAction)
+
+  @@unique([utilidadId, socioId])
+  @@index([socioId], map: "idx_utilidades_detalle_socio")
+  @@index([utilidadId], map: "idx_utilidades_detalle_utilidad")
+  @@map("utilidades_detalle")
+}
+
+model Comprobante {
+  id                                          Int          @id @default(autoincrement())
+  codigo                                      String       @unique @db.VarChar(30)
+  tipo                                        String       @db.VarChar(30)
+  transaccion_id                              Int?
+  pago_id                                     Int?
+  credito_id                                  Int?
+  socio_id                                    Int
+  monto                                       Decimal      @db.Decimal(12, 2)
+  concepto                                    String
+  descripcion                                 String?
+  archivo_url                                 String?      @db.VarChar(500)
+  archivo_tipo                                String?      @db.VarChar(50)
+  archivo_tama_o_kb                           Int?         @map("archivo_tamaño_kb")
+  generado_automaticamente                    Boolean?     @default(false)
+  plantilla_usada                             String?      @db.VarChar(100)
+  fecha_emision                               DateTime     @default(now()) @db.Timestamp(6)
+  generado_por_id                             Int?
+  createdAt                                   DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+  creditos                                    Credito?     @relation(fields: [credito_id], references: [id], onUpdate: NoAction)
+  socios_comprobantes_generado_por_idTosocios Socio?       @relation("comprobantes_generado_por_idTosocios", fields: [generado_por_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pagos                                       Pago?        @relation(fields: [pago_id], references: [id], onUpdate: NoAction)
+  socios_comprobantes_socio_idTosocios        Socio        @relation("comprobantes_socio_idTosocios", fields: [socio_id], references: [id], onUpdate: NoAction)
+  transacciones                               Transaccion? @relation(fields: [transaccion_id], references: [id], onUpdate: NoAction)
+
+  @@index([fecha_emision], map: "idx_comprobantes_fecha")
+  @@index([pago_id], map: "idx_comprobantes_pago")
+  @@index([socio_id], map: "idx_comprobantes_socio")
+  @@index([tipo], map: "idx_comprobantes_tipo")
+  @@index([transaccion_id], map: "idx_comprobantes_transaccion")
+  @@map("comprobantes")
+}
+
+model Configuracion {
+  id                 Int       @id @default(autoincrement())
+  clave              String    @unique @db.VarChar(100)
+  valor              String
+  tipoDato           String    @map("tipo_dato") @db.VarChar(20)
+  categoria          String    @db.VarChar(50)
+  nivelSeguridad     Int       @default(1) @map("nivel_seguridad")
+  requiereAprobacion Boolean?  @default(false) @map("requiere_aprobacion_cambio")
+  descripcion        String
+  unidad             String?   @db.VarChar(20)
+  valorMinimo        Decimal?  @map("valor_minimo") @db.Decimal(15, 2)
+  valorMaximo        Decimal?  @map("valor_maximo") @db.Decimal(15, 2)
+  valoresPermitidos  String?   @map("valores_permitidos")
+  valorAnterior      String?   @map("valor_anterior")
+  fechaUltimoCambio  DateTime? @map("fecha_ultimo_cambio") @db.Timestamp(6)
+  modificadoPorId    Int?      @map("modificado_por_id")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  socios             Socio?    @relation(fields: [modificadoPorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([categoria], map: "idx_configuraciones_categoria")
+  @@index([nivelSeguridad], map: "idx_configuraciones_nivel")
+  @@map("configuraciones")
+}
+
+model Notificacion {
+  id                                          Int       @id @default(autoincrement())
+  socioId                                     Int?      @map("socio_id")
+  email                                       String?   @db.VarChar(200)
+  telefono                                    String?   @db.VarChar(20)
+  tipo                                        String    @db.VarChar(50)
+  prioridad                                   String    @default("NORMAL") @db.VarChar(20)
+  asunto                                      String    @db.VarChar(200)
+  mensaje                                     String
+  datosAdicionales                            Json?     @map("datos_adicionales")
+  canal                                       String    @db.VarChar(20)
+  estado                                      String    @default("PENDIENTE") @db.VarChar(20)
+  intentosEnvio                               Int?      @default(0) @map("intentos_envio")
+  errorMensaje                                String?   @map("error_mensaje")
+  fechaProgramada                             DateTime? @map("fecha_programada") @db.Timestamp(6)
+  fechaEnviada                                DateTime? @map("fecha_enviada") @db.Timestamp(6)
+  fechaEntregada                              DateTime? @map("fecha_entregada") @db.Timestamp(6)
+  fechaLeida                                  DateTime? @map("fecha_leida") @db.Timestamp(6)
+  creadaPorId                                 Int?      @map("creada_por_id")
+  createdAt                                   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt                                   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  socios_notificaciones_creada_por_idTosocios Socio?    @relation("notificaciones_creada_por_idTosocios", fields: [creadaPorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  socio                                       Socio?    @relation(fields: [socioId], references: [id], onUpdate: NoAction)
+
+  @@index([canal], map: "idx_notificaciones_canal")
+  @@index([estado], map: "idx_notificaciones_estado")
+  @@index([fechaProgramada], map: "idx_notificaciones_fecha_programada")
+  @@index([prioridad], map: "idx_notificaciones_prioridad")
+  @@index([socioId], map: "idx_notificaciones_socio")
+  @@index([tipo], map: "idx_notificaciones_tipo")
+  @@map("notificaciones")
+}
+
+model Auditoria {
+  id                Int      @id @default(autoincrement())
+  usuarioId         Int?     @map("usuario_id")
+  usuarioEmail      String?  @map("usuario_email") @db.VarChar(200)
+  usuarioRol        String?  @map("usuario_rol") @db.VarChar(20)
+  usuarioIp         String?  @map("usuario_ip") @db.VarChar(45)
+  entidad           String   @db.VarChar(50)
+  entidadId         Int?     @map("entidad_id")
+  accion            String   @db.VarChar(50)
+  descripcion       String
+  datosAnteriores   Json?    @map("datos_anteriores")
+  datosNuevos       Json?    @map("datos_nuevos")
+  cambiosDetectados Json?    @map("cambios_detectados")
+  modulo            String?  @db.VarChar(50)
+  rutaApi           String?  @map("ruta_api") @db.VarChar(200)
+  metodoHttp        String?  @map("metodo_http") @db.VarChar(10)
+  userAgent         String?  @map("user_agent")
+  exitosa           Boolean? @default(true)
+  codigoError       String?  @map("codigo_error") @db.VarChar(20)
+  mensajeError      String?  @map("mensaje_error")
+  fechaAccion       DateTime @default(now()) @map("fecha_accion") @db.Timestamp(6)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  usuario           Socio?   @relation(fields: [usuarioId], references: [id], onUpdate: NoAction)
+
+  @@index([accion], map: "idx_auditoria_accion")
+  @@index([entidad, entidadId], map: "idx_auditoria_entidad")
+  @@index([exitosa], map: "idx_auditoria_exitosa")
+  @@index([fechaAccion], map: "idx_auditoria_fecha")
+  @@index([modulo], map: "idx_auditoria_modulo")
+  @@index([usuarioId], map: "idx_auditoria_usuario")
+  @@map("auditoria")
+}
+
+model Sesion {
+  id                Int       @id @default(autoincrement())
+  token             String    @unique @db.VarChar(500)
+  socioId           Int       @map("socio_id")
+  usuarioEmail      String    @map("usuario_email") @db.VarChar(200)
+  usuarioRol        String    @map("usuario_rol") @db.VarChar(20)
+  ipAddress         String?   @map("ip_address") @db.VarChar(45)
+  userAgent         String?   @map("user_agent")
+  dispositivo       String?   @db.VarChar(100)
+  navegador         String?   @db.VarChar(100)
+  pais              String?   @db.VarChar(100)
+  ciudad            String?   @db.VarChar(100)
+  activa            Boolean?  @default(true)
+  fechaInicio       DateTime  @default(now()) @map("fecha_inicio") @db.Timestamp(6)
+  fechaUltimoAcceso DateTime  @default(now()) @map("fecha_ultimo_acceso") @db.Timestamp(6)
+  fechaExpiracion   DateTime  @map("fecha_expiracion") @db.Timestamp(6)
+  fechaCierre       DateTime? @map("fecha_cierre") @db.Timestamp(6)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  socio             Socio     @relation(fields: [socioId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([activa], map: "idx_sesiones_activa")
+  @@index([fechaExpiracion], map: "idx_sesiones_expiracion")
+  @@index([socioId], map: "idx_sesiones_socio")
+  @@index([token], map: "idx_sesiones_token")
+  @@map("sesiones")
+}
+
+model DashboardMetrica {
+  id                              Int      @id @default(autoincrement())
+  fechaCalculo                    DateTime @map("fecha_calculo") @db.Date
+  tipoPeriodo                     String   @map("tipo_periodo") @db.VarChar(20)
+  totalSociosActivos              Int?     @default(0) @map("total_socios_activos")
+  totalSociosEtapa1               Int?     @default(0) @map("total_socios_etapa_1")
+  totalSociosEtapa2               Int?     @default(0) @map("total_socios_etapa_2")
+  totalSociosEtapa3               Int?     @default(0) @map("total_socios_etapa_3")
+  nuevosSociosPeriodo             Int?     @default(0) @map("nuevos_socios_periodo")
+  totalCreditosActivos            Int?     @default(0) @map("total_creditos_activos")
+  totalCreditosCompletadosPeriodo Int?     @default(0) @map("total_creditos_completados_periodo")
+  montoTotalCreditosActivos       Decimal? @default(0) @map("monto_total_creditos_activos") @db.Decimal(15, 2)
+  montoDesembolsadoPeriodo        Decimal? @default(0) @map("monto_desembolsado_periodo") @db.Decimal(15, 2)
+  totalAhorros                    Decimal? @default(0) @map("total_ahorros") @db.Decimal(15, 2)
+  ingresosIntereses               Decimal? @default(0) @map("ingresos_intereses") @db.Decimal(15, 2)
+  egresosUtilidades               Decimal? @default(0) @map("egresos_utilidades") @db.Decimal(15, 2)
+  margenBruto                     Decimal? @default(0) @map("margen_bruto") @db.Decimal(15, 2)
+  porcentajeMargen                Decimal? @default(0) @map("porcentaje_margen") @db.Decimal(5, 2)
+  totalCreditosMora               Int?     @default(0) @map("total_creditos_mora")
+  porcentajeMorosidad             Decimal? @default(0) @map("porcentaje_morosidad") @db.Decimal(5, 2)
+  montoMoraTotal                  Decimal? @default(0) @map("monto_mora_total") @db.Decimal(15, 2)
+  creditosCastigadosPeriodo       Int?     @default(0) @map("creditos_castigados_periodo")
+  saldoFondoSeguro                Decimal? @default(0) @map("saldo_fondo_seguro") @db.Decimal(15, 2)
+  primasRecaudadasPeriodo         Decimal? @default(0) @map("primas_recaudadas_periodo") @db.Decimal(15, 2)
+  coberturasPagadasPeriodo        Decimal? @default(0) @map("coberturas_pagadas_periodo") @db.Decimal(15, 2)
+  calculadoPorId                  Int?     @map("calculado_por_id")
+  createdAt                       DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  socios                          Socio?   @relation(fields: [calculadoPorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([fechaCalculo, tipoPeriodo])
+  @@index([fechaCalculo(sort: Desc)], map: "idx_dashboard_metricas_fecha")
+  @@index([tipoPeriodo], map: "idx_dashboard_metricas_tipo")
+  @@map("dashboard_metricas")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cambios_documento {
+  id                                                 Int       @id @default(autoincrement())
+  socio_id                                           Int
+  documento_anterior                                 String    @db.VarChar(10)
+  documento_nuevo                                    String    @db.VarChar(10)
+  razon_cambio                                       String
+  documento_respaldo_url                             String?   @db.VarChar(500)
+  documento_oficial_url                              String?   @db.VarChar(500)
+  estado                                             String    @default("SOLICITADO") @db.VarChar(20)
+  fecha_solicitud                                    DateTime  @default(now()) @db.Timestamp(6)
+  fecha_aprobacion                                   DateTime? @db.Timestamp(6)
+  aprobado_por_id                                    Int?
+  observaciones_aprobacion                           String?
+  solicitado_por_id                                  Int?
+  created_at                                         DateTime  @default(now()) @db.Timestamp(6)
+  updated_at                                         DateTime  @default(now()) @db.Timestamp(6)
+  socios_cambios_documento_aprobado_por_idTosocios   Socio?    @relation("cambios_documento_aprobado_por_idTosocios", fields: [aprobado_por_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  socios_cambios_documento_socio_idTosocios          Socio     @relation("cambios_documento_socio_idTosocios", fields: [socio_id], references: [id], onUpdate: NoAction)
+  socios_cambios_documento_solicitado_por_idTosocios Socio?    @relation("cambios_documento_solicitado_por_idTosocios", fields: [solicitado_por_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([estado], map: "idx_cambios_documento_estado")
+  @@index([fecha_solicitud], map: "idx_cambios_documento_fecha")
+  @@index([socio_id], map: "idx_cambios_documento_socio")
+  @@map("cambios_documento")
+}
+
+model GastoOperativo {
+  id                 Int       @id @default(autoincrement())
+  codigo             String    @unique @db.VarChar(20)
+  categoria          String    @db.VarChar(50)
+  descripcion        String
+  monto              Decimal   @db.Decimal(12, 2)
+  fechaGasto         DateTime  @map("fecha_gasto") @db.Timestamp(6)
+  tipoPago           String?   @map("tipo_pago") @db.VarChar(30)
+  numeroComprobante  String?   @map("numero_comprobante") @db.VarChar(50)
+  proveedor          String?   @db.VarChar(200)
+  observaciones      String?
+  registradoPorId    Int?      @map("registrado_por_id")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  registradoPor      Socio?    @relation(fields: [registradoPorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([categoria], map: "idx_gastos_categoria")
+  @@index([fechaGasto], map: "idx_gastos_fecha")
+  @@index([codigo], map: "idx_gastos_codigo")
+  @@map("gastos_operativos")
+}
+
+model FondoSeguro {
+  id                 Int       @id @default(autoincrement())
+  codigo             String?    @unique @db.VarChar(20)
+  tipo               String    @db.VarChar(20)
+  monto              Decimal   @db.Decimal(12, 2)
+  concepto           String
+  socioId            Int?      @map("socio_id")
+  creditoId          Int?      @map("credito_id")
+  fechaMovimiento    DateTime  @default(now()) @map("fecha_movimiento") @db.Timestamp(6)
+  registradoPorId    Int?      @map("registrado_por_id")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  socio              Socio?    @relation("fondo_seguro_socio_idTosocios", fields: [socioId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  credito            Credito?  @relation(fields: [creditoId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  registradoPor      Socio?    @relation("fondo_seguro_registrado_por_idTosocios", fields: [registradoPorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([tipo], map: "idx_fondo_seguro_tipo")
+  @@index([fechaMovimiento], map: "idx_fondo_seguro_fecha")
+  @@index([socioId], map: "idx_fondo_seguro_socio")
+  @@index([creditoId], map: "idx_fondo_seguro_credito")
+  @@map("fondo_seguro")
+}

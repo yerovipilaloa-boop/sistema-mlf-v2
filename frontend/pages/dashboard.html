@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - MLF</title>
+  <!-- Estilos del Dashboard -->
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="../js/api.js?v=1.0.3"></script>
+  <style>
+    body {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 210px;
+      background-color: var(--bg-dark);
+      color: white;
+      padding: 1.25rem 0;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar-header {
+      padding: 0 1.25rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-logo {
+      font-size: 1.35rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .sidebar-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .sidebar-user {
+      padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-user-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .sidebar-user-role {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .sidebar-nav {
+      padding: 0.9rem 0;
+    }
+
+    .nav-item {
+      display: block;
+      padding: 0.7rem 1.25rem;
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .nav-item.active {
+      background-color: var(--primary-color);
+      color: white;
+      border-left: 3px solid white;
+    }
+
+    .nav-item-icon {
+      margin-right: 0.65rem;
+    }
+
+    /* BADGE FOR PENDING ITEMS */
+    .nav-badge {
+      background: #dc3545;
+      color: white;
+      border-radius: 10px;
+      padding: 2px 7px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      margin-left: auto;
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      flex: 1;
+      margin-left: 210px;
+      background-color: var(--bg-secondary);
+    }
+
+    .topbar {
+      background-color: white;
+      padding: 1rem 1.5rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .topbar-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .content-area {
+      padding: 1.5rem;
+    }
+
+    /* STATS CARDS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-md);
+      border-left: 4px solid var(--primary-color);
+    }
+
+    .stat-card.success {
+      border-left-color: var(--success-color);
+    }
+
+    .stat-card.warning {
+      border-left-color: var(--warning-color);
+    }
+
+    .stat-card.danger {
+      border-left-color: var(--danger-color);
+    }
+
+    .stat-title {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+
+    /* PÁGINA */
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* LOADING */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .loading-overlay.hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner spinner-lg" style="border-top-color: var(--primary-color); border-color: rgba(0,0,0,0.1);">
+    </div>
+  </div>
+
+  <!-- Logout Modal -->
+  <div id="logoutModal" class="modal-overlay" style="display: none;">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Cerrar Sesión</h3>
+        <button class="modal-close" onclick="window.closeLogoutModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>¿Estás seguro de que deseas cerrar sesión?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="window.closeLogoutModal()">Cancelar</button>
+        <button class="btn btn-danger" onclick="window.confirmLogout()">Cerrar Sesión</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Gestionar Solicitud -->
+  <div id="gestionarSolicitudModal" class="modal-overlay" style="display: none;">
+    <div class="modal-container" style="max-width: 500px;">
+      <div class="modal-header" id="gestionarModalHeader" style="background: var(--primary-color); color: white;">
+        <h3 class="modal-title">📋 Gestionar Solicitud</h3>
+        <button class="modal-close" onclick="cerrarModalGestionar()" style="color: white;">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 1.5rem;">
+        <div id="gestionarSolicitudContent">
+          <div class="mb-3">
+            <strong>Socio:</strong>
+            <span id="gestSocioNombre">-</span>
+            <small class="text-muted">(<span id="gestSocioCodigo">-</span>)</small>
+          </div>
+          <div class="mb-3">
+            <strong>Tipo de Solicitud:</strong>
+            <span id="gestTipoSolicitud" class="badge">-</span>
+          </div>
+          <div class="mb-3">
+            <strong>Monto:</strong>
+            <span id="gestMonto" style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">$0.00</span>
+          </div>
+          <div class="mb-3" id="gestComprobanteRow" style="display: none;">
+            <strong>Comprobante:</strong>
+            <span id="gestComprobante">-</span>
+          </div>
+          <div class="mb-3">
+            <strong>Mensaje/Observaciones:</strong>
+            <p id="gestMensaje" class="text-muted"
+              style="background: #f8f9fa; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">-</p>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label"><strong>Observaciones del Admin (opcional):</strong></label>
+            <textarea id="gestObservaciones" class="form-control" rows="2"
+              placeholder="Notas sobre la aprobación o rechazo..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary"
+          onclick="cerrarModalGestionar(); return false;">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="btnRechazar"
+          onclick="event.preventDefault(); event.stopPropagation(); rechazarSolicitud(); return false;">❌
+          Rechazar</button>
+        <button type="button" class="btn btn-success" id="btnAprobar"
+          onclick="event.preventDefault(); event.stopPropagation(); aprobarSolicitud(); return false;">✅
+          Aprobar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmación Personalizado -->
+  <div id="confirmModal" class="modal-overlay" style="display: none;">
+    <div class="modal-container" style="max-width: 400px;">
+      <div class="modal-header" style="background: #ffc107; color: #212529;">
+        <h5 class="modal-title">⚠️ Confirmar Acción</h5>
+        <button class="btn-close" onclick="cerrarConfirmModal()"></button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMessage" style="font-size: 1.1rem; text-align: center;">¿Estás seguro?</p>
+      </div>
+      <div class="modal-footer" style="justify-content: center; gap: 1rem;">
+        <button type="button" class="btn btn-secondary btn-lg" onclick="cerrarConfirmModal()">No, Cancelar</button>
+        <button type="button" class="btn btn-success btn-lg" id="confirmYesBtn" onclick="ejecutarAccionConfirmada()">Sí,
+          Confirmar</button>
+      </div>
+    </div>
+  </div>
+  <style>
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-container {
+      background: white;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transform: translateY(-20px);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-container {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #2d3748;
+      margin: 0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #a0aec0;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: #4a5568;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+      color: #4a5568;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+  </style>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">💰</div>
+      <h2 class="sidebar-title">MLF Sistema</h2>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="sidebar-user-name" id="userName">Cargando...</div>
+      <div class="sidebar-user-role" id="userRole">...</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="javascript:void(0)" data-page="inicio">
+        <span class="nav-item-icon">📊</span>
+        Dashboard
+      </a>
+      <a class="nav-item" href="javascript:void(0)" data-page="solicitudes">
+        <span class="nav-item-icon">bell</span>
+        Solicitudes
+        <span class="nav-badge" id="solicitudesBadge" style="display: none;">0</span>
+      </a>
+      <a class="nav-item" href="javascript:void(0)" data-page="socios">
+        <span class="nav-item-icon">👥</span>
+        Socios
+      </a>
+      <a class="nav-item" href="javascript:void(0)" data-page="creditos">
+        <span class="nav-item-icon">💳</span>
+        Créditos
+        <span class="nav-badge" id="creditosPendientesBadge" style="display: none;">0</span>
+      </a>
+      <a class="nav-item" href="javascript:void(0)" data-page="pagos">
+        <span class="nav-item-icon">💵</span>
+        Pagos
+      </a>
+      <a class="nav-item" href="javascript:void(0)" data-page="gastos">
+        <span class="nav-item-icon">💸</span>
+        Gastos
+      </a>
+      <a class="nav-item" id="logoutBtn" href="javascript:void(0)" onclick="window.cerrarSesion()"
+        style="cursor: pointer;">
+        <span class="nav-item-icon">🚪</span>
+        Cerrar Sesión
+      </a>
+    </nav>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="topbar">
+      <h1 class="topbar-title" id="pageTitle">Dashboard</h1>
+      <div id="topbarActions"></div>
+    </div>
+
+    <div class="content-area">
+      <!-- Página: Inicio/Dashboard -->
+      <div id="pageInicio" class="page active">
+        <!-- Filtros de Período -->
+        <div style="margin-bottom: 1.5rem;">
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <strong>Período:</strong>
+            <button class="btn btn-sm btn-primary periodo-btn active" data-periodo="mes">Mes</button>
+            <button class="btn btn-sm btn-secondary periodo-btn" data-periodo="semana">Semana</button>
+            <button class="btn btn-sm btn-secondary periodo-btn" data-periodo="dia">Hoy</button>
+            <button class="btn btn-sm btn-secondary periodo-btn" data-periodo="año">Año</button>
+            <span id="periodoActual" style="margin-left: 1rem; color: #666;"></span>
+          </div>
+        </div>
+
+        <!-- Dashboard Compacto en Formato Tabla -->
+        <div class="row" style="margin-bottom: 1rem;">
+          <!-- Columna Izquierda: Métricas Financieras -->
+          <div class="col-8">
+            <!-- Tabla: Resumen Financiero del Período -->
+            <div class="card mb-2" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div class="card-header"
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.5rem 1rem;">
+                <h3 class="card-title" style="margin: 0; font-size: 0.95rem; font-weight: 600;">📊 Resumen Financiero
+                  del Período</h3>
+              </div>
+              <div class="card-body" style="padding: 0;">
+                <table class="table table-sm table-hover mb-0" style="font-size: 0.875rem;">
+                  <thead style="background-color: #f8f9fa;">
+                    <tr>
+                      <th style="padding: 0.5rem; width: 50%;">Concepto</th>
+                      <th style="padding: 0.5rem; text-align: right; width: 30%;">Monto</th>
+                      <th style="padding: 0.5rem; text-align: right; width: 20%;">Margen</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="background-color: #d4edda;">
+                      <td style="padding: 0.5rem;"><strong>💰 Ingresos</strong> <small class="text-muted">(Intereses +
+                          Mora)</small></td>
+                      <td style="padding: 0.5rem; text-align: right; font-weight: 600;" id="statIngresos">$0.00</td>
+                      <td style="padding: 0.5rem; text-align: right;">100%</td>
+                    </tr>
+                    <tr style="background-color: #f8d7da;">
+                      <td style="padding: 0.5rem;"><strong>💸 Egresos Totales</strong> <small class="text-muted">(Ver
+                          desglose abajo)</small></td>
+                      <td style="padding: 0.5rem; text-align: right; font-weight: 600;" id="statEgresos">$0.00</td>
+                      <td style="padding: 0.5rem; text-align: right;">-</td>
+                    </tr>
+                    <tr style="background-color: #d1ecf1; border-top: 2px solid #17a2b8;">
+                      <td style="padding: 0.5rem;"><strong>📊 Utilidad Bruta</strong> <small
+                          class="text-muted">(Ingresos - Egresos Operativos)</small></td>
+                      <td style="padding: 0.5rem; text-align: right; font-weight: 600; color: #17a2b8;"
+                        id="statUtilidadBruta">$0.00</td>
+                      <td style="padding: 0.5rem; text-align: right; font-weight: 600; color: #17a2b8;"
+                        id="statMargenBruto">0%</td>
+                    </tr>
+                    <tr style="background-color: #d4edda; border-top: 2px solid #28a745;">
+                      <td style="padding: 0.5rem;"><strong>💎 Utilidad Neta</strong> <small class="text-muted">(Utilidad
+                          Bruta - Utilidades a Pagar)</small></td>
+                      <td style="padding: 0.5rem; text-align: right; font-weight: 700; color: #28a745; font-size: 1rem;"
+                        id="statUtilidadNeta">$0.00</td>
+                      <td style="padding: 0.5rem; text-align: right; font-weight: 700; color: #28a745; font-size: 1rem;"
+                        id="statMargenNeto">0%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tabla: Desglose de Egresos -->
+            <div class="card mb-2" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div class="card-header"
+                style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 0.5rem 1rem;">
+                <h3 class="card-title" style="margin: 0; font-size: 0.95rem; font-weight: 600;">💸 Desglose Detallado de
+                  Egresos</h3>
+              </div>
+              <div class="card-body" style="padding: 0;">
+                <table class="table table-sm table-hover mb-0" style="font-size: 0.875rem;">
+                  <thead style="background-color: #f8f9fa;">
+                    <tr>
+                      <th style="padding: 0.5rem; width: 50%;">Categoría</th>
+                      <th style="padding: 0.5rem; text-align: right; width: 30%;">Monto</th>
+                      <th style="padding: 0.5rem; width: 20%;">Detalle</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style="padding: 0.5rem;">🏢 Gastos Operativos</td>
+                      <td style="padding: 0.5rem; text-align: right; font-weight: 600;" id="detalleGastosOperativos">
+                        $0.00</td>
+                      <td style="padding: 0.5rem;"><small class="text-muted">Ver categorías abajo</small></td>
+                    </tr>
+                    <tr style="background-color: #fff3cd;">
+                      <td style="padding: 0.5rem;"><strong>💰 Utilidades a Pagar (1%)</strong></td>
+                      <td style="padding: 0.5rem; text-align: right; font-weight: 700;" id="detalleUtilidadesPagar">
+                        $0.00</td>
+                      <td style="padding: 0.5rem;"><small class="text-muted">Sobre $<span
+                            id="detalleAhorroTotal">0</span></small></td>
+                    </tr>
+                    <tr style="border-top: 2px solid #dee2e6; background-color: #f8f9fa;">
+                      <td style="padding: 0.5rem;"><strong>📊 TOTAL EGRESOS</strong></td>
+                      <td style="padding: 0.5rem; text-align: right; font-weight: 700; font-size: 1rem;"
+                        id="detalleTotalEgresos">$0.00</td>
+                      <td style="padding: 0.5rem;">-</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tabla: Gastos por Categoría -->
+            <div class="card mb-2" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div class="card-header" style="background: #6c757d; color: white; padding: 0.5rem 1rem;">
+                <h3 class="card-title" style="margin: 0; font-size: 0.95rem; font-weight: 600;">🏷️ Gastos Operativos
+                  por Categoria</h3>
+              </div>
+              <div class="card-body" style="padding: 0;">
+                <table class="table table-sm table-hover mb-0" style="font-size: 0.875rem;">
+                  <thead style="background-color: #f8f9fa;">
+                    <tr>
+                      <th style="padding: 0.5rem; width: 70%;">Categoria</th>
+                      <th style="padding: 0.5rem; text-align: right; width: 30%;">Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody id="gastosDetalle">
+                    <tr>
+                      <td colspan="2" style="padding: 1rem; text-align: center;" class="text-muted">Cargando...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tabla: Fondo de Seguro de Desgravamen (RESERVAS) -->
+            <div class="card mb-2" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div class="card-header"
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.5rem 1rem;">
+                <h3 class="card-title" style="margin: 0; font-size: 0.95rem; font-weight: 600;">🛡️ Fondo de Seguro de
+                  Desgravamen (Reservas)</h3>
+              </div>
+              <div class="card-body" style="padding: 0;">
+                <table class="table table-sm table-hover mb-0" style="font-size: 0.875rem;">
+                  <thead style="background-color: #f8f9fa;">
+                    <tr>
+                      <th style="padding: 0.5rem; width: 50%;">Concepto</th>
+                      <th style="padding: 0.5rem; text-align: right; width: 30%;">Monto</th>
+                      <th style="padding: 0.5rem; width: 20%;">Detalle</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style="padding: 0.5rem;">📥 Primas Cobradas (Acumulado)</td>
+                      <td style="padding: 0.5rem; text-align: right; font-weight: 600; color: #28a745;"
+                        id="fondoSeguroAcumulado">$0.00</td>
+                      <td style="padding: 0.5rem;"><small class="text-muted">Total historico</small></td>
+                    </tr>
+                    <tr style="background-color: #fff3cd;">
+                      <td style="padding: 0.5rem;">⏳ Primas Pendientes de Cobro</td>
+                      <td style="padding: 0.5rem; text-align: right; font-weight: 600; color: #856404;"
+                        id="fondoSeguroPendiente">$0.00</td>
+                      <td style="padding: 0.5rem;"><small class="text-muted">En cuotas activas</small></td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 0.5rem;">✅ Liberado (Creditos Liquidados)</td>
+                      <td style="padding: 0.5rem; text-align: right; font-weight: 600; color: #17a2b8;"
+                        id="fondoSeguroLiberado">$0.00</td>
+                      <td style="padding: 0.5rem;"><small class="text-muted">→ Ingreso</small></td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 0.5rem;">⚠️ Utilizado (Siniestros)</td>
+                      <td style="padding: 0.5rem; text-align: right; font-weight: 600; color: #dc3545;"
+                        id="fondoSeguroUtilizado">$0.00</td>
+                      <td style="padding: 0.5rem;"><small class="text-muted">Fallecimientos</small></td>
+                    </tr>
+                    <tr style="border-top: 2px solid #667eea; background-color: #e8f4f8;">
+                      <td style="padding: 0.5rem;"><strong>💰 Fondo Disponible</strong></td>
+                      <td style="padding: 0.5rem; text-align: right; font-weight: 700; font-size: 1rem; color: #667eea;"
+                        id="fondoSeguroDisponible">$0.00</td>
+                      <td style="padding: 0.5rem;"><small class="text-muted">Reserva activa</small></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="p-2" style="background: #e7f3ff; font-size: 0.75rem; color: #0c5460;">
+                  <strong>Nota:</strong> El seguro (1% del monto) se financia con el credito. Es una RESERVA, no un
+                  egreso. Se libera como ingreso al liquidar el credito.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna Derecha: Indicadores y Cartera -->
+          <div class="col-4">
+            <!-- Tabla: Indicadores Generales -->
+            <div class="card mb-2" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div class="card-header" style="background: #17a2b8; color: white; padding: 0.5rem 1rem;">
+                <h3 class="card-title" style="margin: 0; font-size: 0.95rem; font-weight: 600;">📈 Indicadores Generales
+                </h3>
+              </div>
+              <div class="card-body" style="padding: 0;">
+                <table class="table table-sm mb-0" style="font-size: 0.85rem;">
+                  <tbody>
+                    <tr>
+                      <td style="padding: 0.4rem; border-top: none;">👥 Socios Activos</td>
+                      <td style="padding: 0.4rem; text-align: right; font-weight: 600; border-top: none;"
+                        id="statSociosActivos">-</td>
+                    </tr>
+                    <tr style="background-color: #f8f9fa;">
+                      <td style="padding: 0.4rem;">💳 Créditos Activos</td>
+                      <td style="padding: 0.4rem; text-align: right; font-weight: 600;" id="statCreditosActivos">-</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 0.4rem;">💰 Total Ahorros</td>
+                      <td style="padding: 0.4rem; text-align: right; font-weight: 600;" id="statTotalAhorros">$0</td>
+                    </tr>
+                    <tr style="background-color: #fff3cd;">
+                      <td style="padding: 0.4rem;">👑 Aporte Admin</td>
+                      <td style="padding: 0.4rem; text-align: right; font-weight: 600; color: #856404;"
+                        id="statAporteAdmin">$0</td>
+                    </tr>
+                    <tr style="background-color: #f8f9fa;">
+                      <td style="padding: 0.4rem;">💵 Capital Prestado</td>
+                      <td style="padding: 0.4rem; text-align: right; font-weight: 600;" id="statCapitalPrestado">$0</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tabla: Estado de Cartera -->
+            <div class="card mb-2" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div class="card-header" style="background: #28a745; color: white; padding: 0.5rem 1rem;">
+                <h3 class="card-title" style="margin: 0; font-size: 0.95rem; font-weight: 600;">📊 Estado de Cartera
+                </h3>
+              </div>
+              <div class="card-body" style="padding: 0;">
+                <table class="table table-sm mb-0" style="font-size: 0.85rem;">
+                  <tbody>
+                    <tr>
+                      <td style="padding: 0.4rem; border-top: none;">✅ Cartera Vigente</td>
+                      <td
+                        style="padding: 0.4rem; text-align: right; font-weight: 600; color: #28a745; border-top: none;"
+                        id="carteraVigente">$0</td>
+                    </tr>
+                    <tr style="background-color: #fff3cd;">
+                      <td style="padding: 0.4rem;">⚠️ Cartera Vencida</td>
+                      <td style="padding: 0.4rem; text-align: right; font-weight: 600; color: #ffc107;"
+                        id="carteraVencida">$0</td>
+                    </tr>
+                    <tr style="background-color: #f8d7da;">
+                      <td style="padding: 0.4rem;">🚨 Créditos en Mora</td>
+                      <td style="padding: 0.4rem; text-align: right; font-weight: 600; color: #dc3545;"
+                        id="statCreditosMora">0</td>
+                    </tr>
+                    <tr style="background-color: #f8f9fa;">
+                      <td style="padding: 0.4rem;">📊 Tasa Recuperación</td>
+                      <td style="padding: 0.4rem; text-align: right; font-weight: 600;" id="statTasaRecuperacion">0%
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 0.4rem;">🛡️ Provisiones</td>
+                      <td style="padding: 0.4rem; text-align: right; font-weight: 600;" id="statProvisiones">$0</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tabla: Resumen de Pagos -->
+            <div class="card mb-2" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div class="card-header" style="background: #fd7e14; color: white; padding: 0.5rem 1rem;">
+                <h3 class="card-title" style="margin: 0; font-size: 0.95rem; font-weight: 600;">💵 Resumen de Pagos</h3>
+              </div>
+              <div class="card-body" style="padding: 0;">
+                <table class="table table-sm mb-0" style="font-size: 0.85rem;">
+                  <tbody>
+                    <tr>
+                      <td style="padding: 0.4rem; border-top: none;">💰 Capital Recuperado</td>
+                      <td style="padding: 0.4rem; text-align: right; font-weight: 600; border-top: none;"
+                        id="capitalRecuperado">$0</td>
+                    </tr>
+                    <tr style="background-color: #f8f9fa;">
+                      <td style="padding: 0.4rem;">💵 Pagos Recibidos</td>
+                      <td style="padding: 0.4rem; text-align: right; font-weight: 600;" id="pagosRecibidos">$0</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tabla: Socios por Etapa -->
+            <div class="card mb-2" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div class="card-header"
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.5rem 1rem;">
+                <h3 class="card-title" style="margin: 0; font-size: 0.95rem; font-weight: 600;">🎯 Socios por Nivel</h3>
+              </div>
+              <div class="card-body" style="padding: 0;">
+                <table class="table table-sm mb-0" style="font-size: 0.85rem;">
+                  <tbody>
+                    <tr style="background-color: #e7f3ff;">
+                      <td style="padding: 0.4rem; border-top: none;">🥉 Nivel 1 - Iniciante</td>
+                      <td style="padding: 0.4rem; text-align: right; font-weight: 600; border-top: none;"
+                        id="statSociosEtapa1">0</td>
+                    </tr>
+                    <tr style="background-color: #fff4e6;">
+                      <td style="padding: 0.4rem;">🥈 Nivel 2 - Regular</td>
+                      <td style="padding: 0.4rem; text-align: right; font-weight: 600;" id="statSociosEtapa2">0</td>
+                    </tr>
+                    <tr style="background-color: #fff3cd;">
+                      <td style="padding: 0.4rem;">🥇 Nivel 3 - Especial</td>
+                      <td style="padding: 0.4rem; text-align: right; font-weight: 600;" id="statSociosEtapa3">0</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Página: Solicitudes -->
+    <div id="pageSolicitudes" class="page">
+      <div class="card mb-4" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div class="card-header"
+          style="background: white; padding: 1rem 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title" style="margin: 0; font-size: 1.1rem; font-weight: 600;">📥 Bandeja de Solicitudes</h3>
+          <button class="btn btn-sm btn-outline-primary" onclick="cargarSolicitudes()">
+            🔄 Actualizar
+          </button>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0" style="width: 100%;">
+              <thead style="background-color: #f8f9fa;">
+                <tr>
+                  <th style="padding: 1rem;">ID</th>
+                  <th style="padding: 1rem;">Fecha</th>
+                  <th style="padding: 1rem;">Solicitante</th>
+                  <th style="padding: 1rem;">Tipo</th>
+                  <th style="padding: 1rem;">Detalle</th>
+                  <th style="padding: 1rem;">Estado</th>
+                  <th style="padding: 1rem; text-align: right;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="listaSolicitudes">
+                <tr>
+                <tr>
+                  <td colspan="7" style="padding: 2rem; text-align: center;" class="text-muted">Cargando solicitudes...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Paginación simple -->
+          <div
+            style="padding: 1rem; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 0.5rem;">
+            <button class="btn btn-sm btn-secondary" onclick="prevPageSolicitudes()" id="btnPrevSol"
+              disabled>Anterior</button>
+            <span id="pageInfoSol" style="align-self: center; font-size: 0.9rem;">Página 1</span>
+            <button class="btn btn-sm btn-secondary" onclick="nextPageSolicitudes()" id="btnNextSol"
+              disabled>Siguiente</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Página: Socios -->
+    <div id="pageSocios" class="page">
+      <div id="sociosContent">
+        <!-- Se cargará dinámicamente -->
+      </div>
+    </div>
+
+    <!-- Página: Créditos -->
+    <div id="pageCreditos" class="page">
+      <div id="creditosContent">
+        <!-- Se cargará dinámicamente -->
+      </div>
+    </div>
+
+    <!-- Página: Pagos -->
+    <div id="pagePagos" class="page">
+      <div id="pagosContent">
+        <!-- Se cargará dinámicamente -->
+      </div>
+    </div>
+
+    <!-- Página: Gastos -->
+    <div id="pageGastos" class="page">
+      <div id="gastosContent">
+        <!-- Se cargará dinámicamente -->
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script>
+    // Variables globales
+    let currentPage = 'inicio';
+
+    // Verificar autenticación
+    if (!api.isAuthenticated()) {
+      window.location.href = '/login.html';
+    }
+
+    // Elementos
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const userName = document.getElementById('userName');
+    const userRole = document.getElementById('userRole');
+    const pageTitle = document.getElementById('pageTitle');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const navItems = document.querySelectorAll('.nav-item[data-page]');
+
+    // Mostrar/ocultar loading con timeout de seguridad
+    // NOTA: Estas funciones deben ser globales para que los módulos dinámicos las usen
+    let loadingTimeout = null;
+
+    window.showLoading = function () {
+      loadingOverlay.classList.remove('hidden');
+      // Timeout de seguridad: ocultar automáticamente después de 15 segundos
+      if (loadingTimeout) clearTimeout(loadingTimeout);
+      loadingTimeout = setTimeout(() => {
+        window.hideLoading();
+        console.warn('Loading overlay ocultado por timeout de seguridad');
+      }, 15000);
+    };
+
+    window.hideLoading = function () {
+      loadingOverlay.classList.add('hidden');
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+        loadingTimeout = null;
+      }
+    };
+
+    // Alias locales para compatibilidad
+    const showLoading = window.showLoading;
+    const hideLoading = window.hideLoading;
+
+    // Helper: Formatear moneda con separador de miles
+    function formatCurrency(amount) {
+      return '$ ' + parseFloat(amount).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    // Cargar información del usuario
+    async function loadUserInfo() {
+      const user = api.getUser();
+      if (user) {
+        userName.textContent = user.nombreCompleto || user.usuario;
+        userRole.textContent = user.rol;
+      }
+    }
+
+    // Cargar conteo de créditos pendientes de aprobación
+    async function cargarCreditosPendientes() {
+      try {
+        const creditos = await api.getCreditos({ estado: 'SOLICITADO' });
+        const badge = document.getElementById('creditosPendientesBadge');
+
+        if (badge && creditos && creditos.creditos) {
+          const count = creditos.creditos.length;
+          if (count > 0) {
+            badge.textContent = count > 9 ? '9+' : count;
+            badge.style.display = 'inline';
+          } else {
+            badge.style.display = 'none';
+          }
+        }
+      } catch (error) {
+        console.log('Error cargando pendientes:', error.message);
+      }
+    }
+
+    // Cargar estadísticas del dashboard
+    let periodoActual = 'mes';
+
+    async function loadDashboardStats() {
+      try {
+        showLoading();
+
+        // Cargar métricas completas del backend
+        const metricas = await api.getMetricasDashboard(periodoActual);
+
+        // Actualizar período mostrado
+        const periodoTexto = {
+          'dia': 'Hoy',
+          'semana': 'Esta Semana',
+          'mes': 'Este Mes',
+          'año': 'Este Año'
+        };
+        document.getElementById('periodoActual').textContent = periodoTexto[periodoActual] || 'Este Mes';
+
+        // Cargar solicitudes pendientes también
+        await cargarSolicitudes();
+
+        // Métricas principales
+        document.getElementById('statIngresos').textContent = formatCurrency(metricas.ingresos.totalInteresesCobrados);
+        document.getElementById('statEgresos').textContent = formatCurrency(metricas.utilidades.egresosTotal);
+        document.getElementById('statUtilidadBruta').textContent = formatCurrency(metricas.utilidades.utilidadBruta);
+        document.getElementById('statMargenBruto').textContent = metricas.utilidades.margenBruto.toFixed(1) + '%';
+        document.getElementById('statUtilidadNeta').textContent = formatCurrency(metricas.utilidades.utilidadNeta);
+        document.getElementById('statMargenNeto').textContent = metricas.utilidades.margenNeto.toFixed(1) + '%';
+
+        // Indicadores secundarios
+        document.getElementById('statSociosActivos').textContent = metricas.resumen.sociosActivos;
+        document.getElementById('statCreditosActivos').textContent = metricas.resumen.creditosActivos;
+        document.getElementById('statTotalAhorros').textContent = formatCurrency(metricas.resumen.totalAhorros);
+        document.getElementById('statAporteAdmin').textContent = formatCurrency(metricas.resumen.aporteAdministrador || 0);
+        document.getElementById('statCapitalPrestado').textContent = formatCurrency(metricas.resumen.capitalPrestado);
+        document.getElementById('statTasaRecuperacion').textContent = metricas.ingresos.tasaRecuperacion.toFixed(1) + '%';
+        document.getElementById('statProvisiones').textContent = formatCurrency(metricas.cartera.provisionesNecesarias);
+
+        // Socios por etapa
+        document.getElementById('statSociosEtapa1').textContent = metricas.resumen.sociosPorEtapa?.etapa1 || 0;
+        document.getElementById('statSociosEtapa2').textContent = metricas.resumen.sociosPorEtapa?.etapa2 || 0;
+        document.getElementById('statSociosEtapa3').textContent = metricas.resumen.sociosPorEtapa?.etapa3 || 0;
+
+        // Estado de cartera
+        document.getElementById('carteraVigente').textContent = formatCurrency(metricas.cartera.carteraVigente);
+        document.getElementById('carteraVencida').textContent = formatCurrency(metricas.cartera.carteraVencida);
+        document.getElementById('statCreditosMora').textContent = metricas.cartera.creditosEnMora;
+
+        // Desglose detallado de egresos
+        document.getElementById('detalleGastosOperativos').textContent = formatCurrency(metricas.egresos.totalGastosOperativos);
+        document.getElementById('detalleUtilidadesPagar').textContent = formatCurrency(metricas.egresos.utilidadesPendientesPagar);
+        document.getElementById('detalleAhorroTotal').textContent = formatCurrency(metricas.resumen.totalAhorros).replace('$', '');
+        document.getElementById('detalleTotalEgresos').textContent = formatCurrency(metricas.utilidades.egresosTotal);
+
+        // Fondo de Seguro de Desgravamen (RESERVAS - no es egreso)
+        if (metricas.reservas) {
+          document.getElementById('fondoSeguroAcumulado').textContent = formatCurrency(metricas.reservas.fondoSeguroAcumulado);
+          document.getElementById('fondoSeguroPendiente').textContent = formatCurrency(metricas.reservas.primasPendientesCobro);
+          document.getElementById('fondoSeguroLiberado').textContent = formatCurrency(metricas.reservas.fondoSeguroLiberado);
+          document.getElementById('fondoSeguroUtilizado').textContent = formatCurrency(metricas.reservas.fondoSeguroUtilizado);
+          document.getElementById('fondoSeguroDisponible').textContent = formatCurrency(metricas.reservas.fondoSeguroDisponible);
+        }
+
+        // Resumen de pagos
+        document.getElementById('capitalRecuperado').textContent = formatCurrency(metricas.ingresos.totalCapitalRecuperado);
+        document.getElementById('pagosRecibidos').textContent = formatCurrency(metricas.ingresos.totalPagosRecibidos);
+
+        // Desglose de gastos
+        renderDesgloseGastos(metricas.egresos.gastosPorCategoria);
+
+        hideLoading();
+      } catch (error) {
+        console.error('Error cargando estadísticas:', error);
+        alert('Error al cargar métricas del dashboard');
+        hideLoading();
+      }
+    }
+
+    // ==========================================
+    // LÓGICA DE SOLICITUDES
+    // ==========================================
+    let solicitudesPage = 1;
+    let solicitudesTotalPages = 1;
+
+    async function cargarSolicitudes(page = 1) {
+      try {
+        const tbody = document.getElementById('listaSolicitudes');
+        if (!tbody) return; // Si no estamos en la página correcta o no cargó el DOM
+
+        // Solo mostrar loading si es carga manual o cambio de página, no en background
+        if (document.getElementById('pageSolicitudes').style.display !== 'none') {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">Cargando...</td></tr>';
+        }
+
+        const data = await api.getNotificacionesAdmin({
+          page,
+          limit: 10,
+          tipos: 'SOLICITUD_DEPOSITO,SOLICITUD_RETIRO,SOLICITUD_PAGO,PAGO_REGISTRADO', // Tipos relevantes
+        });
+
+        solicitudesPage = data.page;
+        solicitudesTotalPages = data.totalPages;
+        document.getElementById('pageInfoSol').textContent = `Página ${solicitudesPage} de ${solicitudesTotalPages || 1}`;
+        document.getElementById('btnPrevSol').disabled = solicitudesPage <= 1;
+        document.getElementById('btnNextSol').disabled = solicitudesPage >= solicitudesTotalPages;
+
+        if (!data.notificaciones || data.notificaciones.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;" class="text-muted">No hay solicitudes pendientes.</td></tr>';
+          document.getElementById('solicitudesBadge').style.display = 'none';
+          return;
+        }
+
+        // Actualizar badge
+        const badge = document.getElementById('solicitudesBadge');
+        if (data.total > 0) {
+          badge.textContent = data.total > 9 ? '9+' : data.total;
+          badge.style.display = 'inline';
+        } else {
+          badge.style.display = 'none';
+        }
+
+        tbody.innerHTML = '';
+        // Inicializar array de datos de solicitudes
+        window.solicitudesData = [];
+        data.notificaciones.forEach((notif, index) => {
+          const row = document.createElement('tr');
+
+          let tipoBadge = '';
+          let tipoLabel = '';
+          let monto = 0;
+          let extraInfo = '';
+
+          // Analizar datos adicionales
+          const datos = notif.datosAdicionales || {};
+
+          switch (notif.tipo) {
+            case 'SOLICITUD_DEPOSITO':
+              tipoBadge = '<span class="badge bg-success" style="background:#d4edda; color:#155724; padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem;">DEPÓSITO</span>';
+              tipoLabel = 'Solicitud de Depósito';
+              monto = datos.monto || 0;
+              extraInfo = datos.comprobante ? `<a href="${datos.comprobante}" target="_blank">Ver Comprobante</a>` : '';
+              break;
+            case 'SOLICITUD_RETIRO':
+              tipoBadge = '<span class="badge bg-warning" style="background:#fff3cd; color:#856404; padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem;">RETIRO</span>';
+              tipoLabel = 'Solicitud de Retiro';
+              monto = datos.monto || 0;
+              break;
+            case 'SOLICITUD_PAGO': // Backend envía SOLICITUD_PAGO
+            case 'PAGO_REGISTRADO': // Por compatibilidad
+              tipoBadge = '<span class="badge bg-primary" style="background:#cce5ff; color:#004085; padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem;">PAGO</span>';
+              tipoLabel = 'Pago Reportado';
+              monto = datos.montoPagado || datos.monto || 0;
+              extraInfo = datos.codigoCredito ? `Crédito: ${datos.codigoCredito}` : '';
+              break;
+            default:
+              tipoBadge = '<span class="badge bg-secondary" style="background:#e2e3e5; color:#383d41; padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem;">OTRO</span>';
+              tipoLabel = notif.tipo;
+          }
+
+          const fecha = new Date(notif.createdAt).toLocaleDateString() + ' ' + new Date(notif.createdAt).toLocaleTimeString();
+
+          const solicitante = notif.socios_notificaciones_creada_por_idTosocios || notif.socio;
+
+          row.innerHTML = `
+            <td style="padding: 1rem;"><strong>#${notif.id}</strong></td>
+            <td style="padding: 1rem;">${fecha}</td>
+            <td style="padding: 1rem;">
+                <strong>${solicitante?.nombreCompleto || 'Desconocido'}</strong><br>
+                <small class="text-muted">${solicitante?.codigo || ''}</small>
+            </td>
+            <td style="padding: 1rem;">${tipoBadge}</td>
+            <td style="padding: 1rem;">
+                <strong>${formatCurrency(monto)}</strong><br>
+                <small>${extraInfo}</small>
+                ${notif.mensaje ? `<div style="font-size:0.8rem; color:#666; margin-top:2px;">${notif.mensaje}</div>` : ''}
+            </td>
+            <td style="padding: 1rem;">
+                ${notif.fechaLeida ? '<span style="color:green">Atendido</span>' : '<span style="color:orange">Pendiente</span>'}
+            </td>
+            <td style="padding: 1rem; text-align: right;">
+                ${notif.fechaLeida
+              ? '<button class="btn btn-sm btn-secondary" disabled>Procesado</button>'
+              : `<button class="btn btn-sm btn-primary" onclick="window.abrirModalGestionarPorId('${notif.id}')">Gestionar</button>`
+            }
+            </td>
+          `;
+          // Guardar datos de la solicitud para acceso posterior
+          window.solicitudesData.push({
+            id: notif.id,
+            tipo: notif.tipo,
+            socioNombre: notif.socio?.nombreCompleto || 'Desconocido',
+            socioCodigo: notif.socio?.codigo || '',
+            socioIdSolicitante: datos.socioIdSolicitante || datos.socioId || notif.creadaPorId,
+            monto: monto,
+            comprobante: datos.comprobante || '',
+            mensaje: notif.mensaje || ''
+          });
+          tbody.appendChild(row);
+        });
+
+      } catch (error) {
+        console.error('Error loading solicitudes:', error);
+      }
+    }
+
+    function nextPageSolicitudes() {
+      if (solicitudesPage < solicitudesTotalPages) {
+        cargarSolicitudes(solicitudesPage + 1);
+      }
+    }
+
+    function prevPageSolicitudes() {
+      if (solicitudesPage > 1) {
+        cargarSolicitudes(solicitudesPage - 1);
+      }
+    }
+
+    // Renderizar desglose de gastos
+    function renderDesgloseGastos(gastosPorCategoria) {
+      const container = document.getElementById('gastosDetalle');
+
+      if (Object.keys(gastosPorCategoria).length === 0) {
+        container.innerHTML = `
+          <tr>
+            <td colspan="2" style="padding: 0.75rem; text-align: center; color: #999;">
+              No hay gastos registrados en este período
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      const labels = {
+        'ADMINISTRATIVO': '🏢 Administrativo',
+        'OPERATIVO': '⚙️ Operativo',
+        'MARKETING': '📣 Marketing',
+        'TECNOLOGIA': '💻 Tecnología',
+        'LEGAL': '⚖️ Legal',
+        'OTROS': '📋 Otros'
+      };
+
+      const html = Object.entries(gastosPorCategoria)
+        .map(([categoria, monto]) => `
+          <tr>
+            <td style="padding: 0.5rem;">${labels[categoria] || categoria}</td>
+            <td style="padding: 0.5rem; text-align: right; font-weight: 600;">${formatCurrency(monto)}</td>
+          </tr>
+        `).join('');
+
+      container.innerHTML = html;
+    }
+
+    // Event listeners para botones de período
+    document.querySelectorAll('.periodo-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        // Quitar clase active de todos
+        document.querySelectorAll('.periodo-btn').forEach(b => {
+          b.classList.remove('btn-primary', 'active');
+          b.classList.add('btn-secondary');
+        });
+
+        // Agregar clase active al clickeado
+        this.classList.remove('btn-secondary');
+        this.classList.add('btn-primary', 'active');
+
+        // Cambiar período y recargar
+        periodoActual = this.dataset.periodo;
+        loadDashboardStats();
+      });
+    });
+
+    // Navegación entre páginas
+    function navigateTo(pageName) {
+      // Ocultar todas las páginas
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+      });
+
+      // Mostrar página seleccionada
+      const pageElement = document.getElementById(`page${pageName.charAt(0).toUpperCase() + pageName.slice(1)}`);
+      if (pageElement) {
+        pageElement.classList.add('active');
+      }
+
+      // Actualizar navegación activa
+      navItems.forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.page === pageName) {
+          item.classList.add('active');
+        }
+      });
+
+      // Actualizar título
+      const titles = {
+        'inicio': 'Dashboard Financiero',
+        'socios': 'Gestión de Socios',
+        'creditos': 'Gestión de Créditos',
+        'pagos': 'Registro de Pagos',
+        'gastos': 'Gastos Operativos'
+      };
+      pageTitle.textContent = titles[pageName] || 'Dashboard';
+
+      currentPage = pageName;
+
+      // Cargar contenido de la página
+      loadPageContent(pageName);
+    }
+
+    // Cargar contenido de página
+    async function loadPageContent(pageName) {
+      if (pageName === 'inicio') {
+        loadDashboardStats();
+      } else if (pageName === 'socios') {
+        loadSociosPage();
+      } else if (pageName === 'creditos') {
+        loadCreditosPage();
+      } else if (pageName === 'pagos') {
+        loadPagosPage();
+      } else if (pageName === 'gastos') {
+        loadGastosPage();
+      }
+    }
+
+    // Event listeners    // Navegación
+    navItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        // Quitar clase active de todos
+        navItems.forEach(nav => nav.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+
+        // Activar el clickeado
+        const pageId = item.dataset.page;
+        item.classList.add('active');
+
+        const targetPage = document.getElementById('page' + pageId.charAt(0).toUpperCase() + pageId.slice(1));
+        if (targetPage) {
+          targetPage.classList.add('active');
+        }
+
+        // Actualizar título
+        const titles = {
+          'inicio': 'Dashboard',
+          'socios': 'Gestión de Socios',
+          'creditos': 'Gestión de Créditos',
+          'pagos': 'Gestión de Pagos',
+          'gastos': 'Gastos Operativos',
+          'solicitudes': 'Bandeja de Solicitudes'
+        };
+        pageTitle.textContent = titles[pageId] || 'Dashboard';
+
+        // IMPORTANTE: Cargar contenido de la página
+        loadPageContent(pageId);
+      });
+    });
+
+    // Logout - Modal Logic
+    const logoutModal = document.getElementById('logoutModal');
+
+    window.cerrarSesion = function () {
+      logoutModal.style.display = 'flex';
+      // Small timeout to allow display:flex to apply before adding active class for transition
+      setTimeout(() => {
+        logoutModal.classList.add('active');
+      }, 10);
+    };
+
+    window.closeLogoutModal = function () {
+      logoutModal.classList.remove('active');
+      setTimeout(() => {
+        logoutModal.style.display = 'none';
+      }, 300);
+    };
+
+    window.confirmLogout = async function () {
+      try {
+        await api.logout();
+      } catch (e) {
+        console.log('Error en logout (ignorado):', e);
+      }
+      window.location.href = '../index.html';
+    };
+
+    // Close modal when clicking outside
+    logoutModal.addEventListener('click', function (e) {
+      if (e.target === logoutModal) {
+        window.closeLogoutModal();
+      }
+    });
+
+    // Nota: El botón de logout ya tiene onclick="window.cerrarSesion()" en el HTML
+    // No se necesita addEventListener adicional
+
+    // Variables para rastrear módulos cargados
+    let modulosInicializados = {
+      socios: false,
+      creditos: false,
+      pagos: false,
+      gastos: false
+    };
+
+    // Cargar páginas (placeholder - se implementarán después)
+    function loadSociosPage() {
+      const container = document.getElementById('sociosContent');
+
+      // Si el módulo ya fue inicializado, solo limpiar y reinicializar
+      if (modulosInicializados.socios) {
+        container.innerHTML = '';
+        // Forzar reinicialización
+        const script = document.querySelector('script[src^="../js/socios.js"]');
+        if (script) {
+          script.remove();
+          modulosInicializados.socios = false;
+        }
+      }
+
+      container.innerHTML = '<p>Cargando módulo de socios...</p>';
+      // Agregar timestamp para evitar caché del navegador
+      const version = Date.now();
+      loadScript(`../js/socios.js?v=${version}`, () => {
+        modulosInicializados.socios = true;
+      });
+    }
+
+    function loadCreditosPage() {
+      const container = document.getElementById('creditosContent');
+
+      // Si el módulo ya fue inicializado, solo limpiar y reinicializar
+      if (modulosInicializados.creditos) {
+        container.innerHTML = '';
+        // Forzar reinicialización
+        const script = document.querySelector('script[src="../js/creditos.js"]');
+        if (script) {
+          script.remove();
+          modulosInicializados.creditos = false;
+        }
+      }
+
+      container.innerHTML = '<p>Cargando módulo de créditos...</p>';
+      loadScript('../js/creditos.js', () => {
+        modulosInicializados.creditos = true;
+        if (typeof window.initCreditosModule === 'function') {
+          window.initCreditosModule();
+        }
+      });
+    }
+
+    function loadPagosPage() {
+      const container = document.getElementById('pagosContent');
+
+      // Si el módulo ya fue inicializado, solo limpiar y reinicializar
+      if (modulosInicializados.pagos) {
+        container.innerHTML = '';
+        // Forzar reinicialización
+        const script = document.querySelector('script[src="../js/pagos.js"]');
+        if (script) {
+          script.remove();
+          modulosInicializados.pagos = false;
+        }
+      }
+
+      container.innerHTML = '<p>Cargando módulo de pagos...</p>';
+      loadScript('../js/pagos.js', () => {
+        modulosInicializados.pagos = true;
+        if (typeof window.initPagosModule === 'function') {
+          window.initPagosModule();
+        }
+      });
+    }
+
+    function loadGastosPage() {
+      const container = document.getElementById('gastosContent');
+
+      // Si el módulo ya fue inicializado, solo limpiar y reinicializar
+      if (modulosInicializados.gastos) {
+        container.innerHTML = '';
+        // Forzar reinicialización
+        const script = document.querySelector('script[src="../js/gastos.js"]');
+        if (script) {
+          script.remove();
+          modulosInicializados.gastos = false;
+        }
+      }
+
+      container.innerHTML = '<p>Cargando módulo de gastos...</p>';
+      loadScript('../js/gastos.js', () => {
+        modulosInicializados.gastos = true;
+        if (typeof window.initGastosModule === 'function') {
+          window.initGastosModule();
+        }
+      });
+    }
+
+    // Helper para cargar scripts dinámicamente con cache-busting
+    function loadScript(src, onLoad) {
+      const script = document.createElement('script');
+      script.src = src + '?v=1.0.8';
+
+      if (onLoad) {
+        script.onload = onLoad;
+      }
+
+      document.body.appendChild(script);
+    }
+
+    // Funciones globales para acciones rápidas
+    window.abrirRegistroGasto = function () {
+      navigateTo('gastos');
+      // El módulo de gastos manejará el modal de registro
+      setTimeout(() => {
+        if (window.mostrarModalRegistroGasto) {
+          window.mostrarModalRegistroGasto();
+        }
+      }, 500);
+    };
+
+    window.generarReporteFinanciero = function () {
+      alert('Función de reportes en desarrollo. Próximamente podrás exportar reportes en PDF y Excel.');
+    };
+
+    // ============================================
+    // GESTIÓN DE SOLICITUDES
+    // ============================================
+
+    // Variable para almacenar la solicitud actual que se está gestionando
+    let solicitudActual = null;
+
+    // Función wrapper que recibe el índice del array
+    window.abrirModalGestionarIdx = function (idx) {
+      const solicitud = window.solicitudesData[parseInt(idx)];
+      if (solicitud) {
+        window.abrirModalGestionar(solicitud);
+      } else {
+        alert('Error: No se encontraron los datos de la solicitud');
+      }
+    };
+
+    // Abrir modal de gestionar por ID (Más robusto que por índice)
+    window.abrirModalGestionarPorId = function (id) {
+      // Usamos == para permitir coincidencia si id viene como string del HTML y es número en datos
+      const solicitud = window.solicitudesData.find(s => s.id == id);
+      if (!solicitud) {
+        console.error('Solicitud no encontrada para ID:', id);
+        alert('Error: No se pudieron cargar los datos de esta solicitud.');
+        return;
+      }
+      abrirModalGestionar(solicitud);
+    };
+
+    // Función auxiliar para abrir modal (Recibe el objeto solicitud ya encontrado)
+    function abrirModalGestionar(solicitud) {
+      solicitudActual = solicitud;
+
+      // Resetear visualización
+      document.getElementById('gestionarSolicitudContent').style.display = 'block';
+
+      // Llenar datos
+      document.getElementById('gestSocioNombre').textContent = solicitud.socioNombre;
+      document.getElementById('gestSocioCodigo').textContent = solicitud.socioCodigo || 'N/A';
+      document.getElementById('gestMonto').textContent = formatCurrency(solicitud.monto);
+
+      const tipoEl = document.getElementById('gestTipoSolicitud');
+      const headerEl = document.getElementById('gestionarModalHeader');
+
+      // Limpiar estilos previos
+      tipoEl.className = 'badge';
+
+      switch (solicitud.tipo) {
+        case 'SOLICITUD_DEPOSITO':
+          tipoEl.textContent = 'DEPÓSITO';
+          tipoEl.style.background = '#d4edda';
+          tipoEl.style.color = '#155724';
+          headerEl.style.background = '#28a745';
+          break;
+        case 'SOLICITUD_RETIRO':
+          tipoEl.textContent = 'RETIRO';
+          tipoEl.style.background = '#fff3cd';
+          tipoEl.style.color = '#856404';
+          headerEl.style.background = '#ffc107';
+          break;
+        case 'SOLICITUD_PAGO':
+          tipoEl.textContent = 'REPORTE DE PAGO';
+          tipoEl.style.background = '#cce5ff';
+          tipoEl.style.color = '#004085';
+          headerEl.style.background = '#007bff';
+          break;
+        default:
+          tipoEl.textContent = solicitud.tipo;
+      }
+
+      // Comprobante
+      if (solicitud.comprobante) {
+        document.getElementById('gestComprobanteRow').style.display = 'block';
+        document.getElementById('gestComprobante').textContent = solicitud.comprobante;
+      } else {
+        document.getElementById('gestComprobanteRow').style.display = 'none';
+      }
+
+      // Limpiar observaciones
+      document.getElementById('gestObservaciones').value = '';
+
+      // Mostrar modal - usar clase 'active' para activar transición CSS
+      const modal = document.getElementById('gestionarSolicitudModal');
+      modal.style.display = 'flex';
+      // Force reflow para que la transición CSS funcione
+      modal.offsetHeight;
+      modal.classList.add('active');
+    };
+
+    // Cerrar modal
+    window.cerrarModalGestionar = function () {
+      const modal = document.getElementById('gestionarSolicitudModal');
+      modal.classList.remove('active');
+      setTimeout(() => { modal.style.display = 'none'; }, 300);
+      solicitudActual = null;
+    };
+
+    // Aprobar solicitud
+    async function aprobarSolicitud() {
+      console.log('aprobarSolicitud llamada, solicitudActual:', solicitudActual);
+
+      if (!solicitudActual) {
+        alert('Error: No hay solicitud seleccionada. Por favor cierra y vuelve a abrir.');
+        return;
+      }
+
+      // Validar que tenemos el ID del socio
+      if (!solicitudActual.socioIdSolicitante) {
+        alert('Error: No se pudo identificar al socio de esta solicitud. El ID del socio no está disponible.');
+        console.error('solicitudActual sin socioIdSolicitante:', solicitudActual);
+        return;
+      }
+
+      const observaciones = document.getElementById('gestObservaciones').value.trim();
+
+      // Mostrar modal de confirmación personalizado
+      mostrarConfirmModal(
+        `¿Confirmas APROBAR esta solicitud de ${formatCurrency(solicitudActual.monto)}?`,
+        'aprobar'
+      );
+    }
+
+    // Función que se ejecuta al confirmar
+    let accionPendiente = null;
+
+    function mostrarConfirmModal(mensaje, accion) {
+      accionPendiente = accion;
+      document.getElementById('confirmMessage').textContent = mensaje;
+      const modal = document.getElementById('confirmModal');
+      modal.style.display = 'flex';
+      modal.offsetHeight; // Force reflow
+      modal.classList.add('active');
+    }
+
+    function cerrarConfirmModal() {
+      const modal = document.getElementById('confirmModal');
+      modal.classList.remove('active');
+      setTimeout(() => { modal.style.display = 'none'; }, 300);
+      // NO limpiar accionPendiente aquí, se limpia después de ejecutar
+    }
+
+    async function ejecutarAccionConfirmada() {
+      // Guardar la acción antes de cerrar el modal
+      const accion = accionPendiente;
+      cerrarConfirmModal();
+      accionPendiente = null; // Limpiar después de guardar
+
+      console.log('Ejecutando acción confirmada:', accion);
+
+      if (accion === 'aprobar') {
+        await ejecutarAprobacion();
+      } else if (accion === 'rechazar') {
+        await ejecutarRechazo();
+      }
+    }
+
+    async function ejecutarAprobacion() {
+      const observaciones = document.getElementById('gestObservaciones').value.trim();
+      console.log('Ejecutando aprobación para socio ID:', solicitudActual.socioIdSolicitante);
+
+      try {
+        showLoading();
+
+        // Procesar según tipo
+        if (solicitudActual.tipo === 'SOLICITUD_DEPOSITO') {
+          // Realizar depósito
+          await api.depositarAhorro(solicitudActual.socioIdSolicitante, {
+            monto: solicitudActual.monto,
+            metodo: 'TRANSFERENCIA',
+            concepto: `Depósito aprobado - ${solicitudActual.comprobante || 'Sin comprobante'}`,
+            notas: observaciones || 'Solicitud aprobada desde bandeja'
+          });
+        } else if (solicitudActual.tipo === 'SOLICITUD_RETIRO') {
+          // Realizar retiro
+          await api.retirarAhorro(solicitudActual.socioIdSolicitante, {
+            monto: solicitudActual.monto,
+            metodo: 'TRANSFERENCIA',
+            concepto: 'Retiro aprobado',
+            notas: observaciones || 'Solicitud aprobada desde bandeja'
+          });
+        } else if (solicitudActual.tipo === 'SOLICITUD_PAGO') {
+          // Para pagos, solo marcamos como leída y el admin debe registrar el pago manualmente
+          alert('El pago ha sido verificado. Por favor, registra el pago en la sección de Pagos para aplicarlo al crédito correspondiente.');
+        }
+
+        // Marcar notificación como leída
+        await api.marcarNotificacionLeida(solicitudActual.id);
+
+        hideLoading();
+        alert('✅ Solicitud aprobada y procesada correctamente');
+        cerrarModalGestionar();
+        cargarSolicitudes(); // Recargar lista
+
+      } catch (error) {
+        hideLoading();
+        console.error('Error aprobando solicitud:', error);
+        alert('Error al procesar: ' + (error.message || 'Intenta de nuevo'));
+      }
+    };
+
+    // Rechazar solicitud
+    async function rechazarSolicitud() {
+      console.log('rechazarSolicitud llamada, solicitudActual:', solicitudActual);
+
+      if (!solicitudActual) {
+        alert('Error: No hay solicitud seleccionada. Por favor cierra y vuelve a abrir.');
+        return;
+      }
+
+      const observaciones = document.getElementById('gestObservaciones').value.trim();
+
+      if (!observaciones) {
+        alert('Por favor ingresa una razón para el rechazo');
+        document.getElementById('gestObservaciones').focus();
+        return;
+      }
+
+      // Mostrar modal de confirmación personalizado
+      mostrarConfirmModal('¿Confirmas RECHAZAR esta solicitud?', 'rechazar');
+    }
+
+    async function ejecutarRechazo() {
+      try {
+        showLoading();
+
+        // Marcar notificación como leída (rechazada)
+        await api.marcarNotificacionLeida(solicitudActual.id);
+
+        // TODO: Enviar notificación al socio indicando el rechazo
+
+        hideLoading();
+        alert('Solicitud rechazada. El socio será notificado.');
+        cerrarModalGestionar();
+        cargarSolicitudes();
+
+      } catch (error) {
+        hideLoading();
+        console.error('Error rechazando solicitud:', error);
+        alert('Error al rechazar: ' + (error.message || 'Intenta de nuevo'));
+      }
+    };
+
+    // Inicialización
+    loadUserInfo();
+    loadDashboardStats();
+    cargarCreditosPendientes(); // Cargar badge de créditos pendientes
+  </script>
+</body>
+
+</html>

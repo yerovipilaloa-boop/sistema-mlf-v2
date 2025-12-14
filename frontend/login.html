@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso - Mi Libertad Financiera</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .login-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px 30px;
+      text-align: center;
+      color: white;
+    }
+
+    .login-logo {
+      font-size: 3.5rem;
+      margin-bottom: 10px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+    }
+
+    .login-header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .login-header p {
+      font-size: 0.9rem;
+      opacity: 0.95;
+      font-weight: 300;
+    }
+
+    .login-body {
+      padding: 40px 30px;
+    }
+
+    .welcome-text {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #444;
+    }
+
+    .welcome-text h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    .welcome-text p {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+      font-size: 0.9rem;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #999;
+      font-size: 1.1rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 14px 15px 14px 45px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-control::placeholder {
+      color: #aaa;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      margin-bottom: 15px;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #666;
+      border: 2px solid #e0e0e0;
+    }
+
+    .btn-secondary:hover {
+      background: #e8e8e8;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .alert-error {
+      background: #fee;
+      color: #c33;
+      border: 1px solid #fcc;
+    }
+
+    .alert-success {
+      background: #efe;
+      color: #3c3;
+      border: 1px solid #cfc;
+    }
+
+    .alert-info {
+      background: #e7f3ff;
+      color: #0066cc;
+      border: 1px solid #b3d9ff;
+    }
+
+    .login-footer {
+      padding: 20px 30px;
+      background: #f9f9f9;
+      text-align: center;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .login-footer a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .login-footer a:hover {
+      color: #764ba2;
+    }
+
+    .version-info {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #e0e0e0;
+      font-size: 0.75rem;
+      color: #999;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .login-header {
+        padding: 30px 20px;
+      }
+
+      .login-body {
+        padding: 30px 20px;
+      }
+
+      .login-header h1 {
+        font-size: 1.3rem;
+      }
+
+      .login-logo {
+        font-size: 3rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <!-- Header -->
+      <div class="login-header">
+        <div class="login-logo">💰</div>
+        <h1>Mi Libertad Financiera</h1>
+        <p>Sistema de Gestión Financiera</p>
+      </div>
+
+      <!-- Body -->
+      <div class="login-body">
+        <div class="welcome-text">
+          <h2>Bienvenido de nuevo</h2>
+          <p>Ingresa tus credenciales para acceder</p>
+        </div>
+
+        <!-- Alerta de error -->
+        <div id="alertContainer"></div>
+
+        <!-- Formulario -->
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="usuario">Usuario</label>
+            <div class="input-wrapper">
+              <span class="input-icon">👤</span>
+              <input type="text" id="usuario" name="usuario" class="form-control" placeholder="Ingresa tu usuario"
+                required autocomplete="username" autofocus>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Contraseña</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔒</span>
+              <input type="password" id="password" name="password" class="form-control"
+                placeholder="Ingresa tu contraseña" required autocomplete="current-password">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="btnLogin">
+            <span id="btnText">Ingresar al Sistema</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="login-footer">
+        <a href="https://mylibertadfinanciera.com">
+          ← Volver al sitio web
+        </a>
+        <div class="version-info">
+          Sistema MLF v1.0 • Desarrollado con 💜
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // Elementos del DOM
+    const loginForm = document.getElementById('loginForm');
+    const usuarioInput = document.getElementById('usuario');
+    const passwordInput = document.getElementById('password');
+    const btnLogin = document.getElementById('btnLogin');
+    const btnText = document.getElementById('btnText');
+    const alertContainer = document.getElementById('alertContainer');
+
+    // Verificar si ya está autenticado
+    if (api.isAuthenticated()) {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      redirectByRole(user.rol);
+    }
+
+    // Función para mostrar alertas
+    function showAlert(message, type = 'error') {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type}`;
+
+      const icon = type === 'error' ? '⚠️' :
+        type === 'success' ? '✅' : 'ℹ️';
+
+      alertDiv.innerHTML = `
+        <span>${icon}</span>
+        <span>${message}</span>
+      `;
+
+      alertContainer.innerHTML = '';
+      alertContainer.appendChild(alertDiv);
+
+      // Auto-ocultar después de 5 segundos
+      setTimeout(() => {
+        alertDiv.style.opacity = '0';
+        alertDiv.style.transition = 'opacity 0.3s';
+        setTimeout(() => alertDiv.remove(), 300);
+      }, 5000);
+    }
+
+    // Función para redireccionar según rol
+    function redirectByRole(rol) {
+      console.log('Redireccionando usuario con rol:', rol);
+
+      switch (rol) {
+        case 'ADMIN':
+        case 'TESORERO':
+          window.location.href = '/pages/dashboard.html';
+          break;
+
+        case 'SOCIO':
+          window.location.href = '/dashboard-socio.html';
+          break;
+
+        default:
+          showAlert('Rol de usuario no reconocido. Contacta al administrador.', 'error');
+          localStorage.clear();
+      }
+    }
+
+    // Función para deshabilitar/habilitar formulario
+    function setLoading(loading) {
+      btnLogin.disabled = loading;
+      usuarioInput.disabled = loading;
+      passwordInput.disabled = loading;
+
+      if (loading) {
+        btnText.innerHTML = '<div class="spinner"></div><span>Validando...</span>';
+      } else {
+        btnText.textContent = 'Ingresar al Sistema';
+      }
+    }
+
+    // Manejar envío del formulario
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const usuario = usuarioInput.value.trim();
+      const password = passwordInput.value;
+
+      // Validaciones básicas
+      if (!usuario || !password) {
+        showAlert('Por favor completa todos los campos', 'error');
+        return;
+      }
+
+      if (usuario.length < 3) {
+        showAlert('El usuario debe tener al menos 3 caracteres', 'error');
+        return;
+      }
+
+      if (password.length < 4) {
+        showAlert('La contraseña debe tener al menos 4 caracteres', 'error');
+        return;
+      }
+
+      // Iniciar proceso de login
+      setLoading(true);
+      alertContainer.innerHTML = '';
+
+      try {
+        console.log('Intentando login para usuario:', usuario);
+
+        // URL dinámica: desarrollo vs producción
+        const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+          ? 'http://127.0.0.1:3000'
+          : '';
+        const response = await fetch(apiBase + '/api/v1/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ usuario, password })
+        });
+
+        const data = await response.json();
+        console.log('Respuesta del servidor:', data);
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Error al iniciar sesión');
+        }
+
+        if (data.success && data.data) {
+          // Guardar datos en localStorage con prefijo mlf_ para api.js
+          localStorage.setItem('mlf_token', data.data.accessToken);
+          localStorage.setItem('mlf_user', JSON.stringify(data.data.user));
+
+          // Guardar también los datos individuales para compatibilidad con dashboard-socio.js
+          localStorage.setItem('token', data.data.accessToken);
+          localStorage.setItem('user', JSON.stringify(data.data.user));
+          localStorage.setItem('socioId', data.data.user.id);
+          localStorage.setItem('rol', data.data.user.rol);
+          localStorage.setItem('nombreCompleto', data.data.user.nombreCompleto);
+
+          console.log('Login exitoso. Usuario:', data.data.user);
+
+          // Mostrar mensaje de éxito
+          showAlert(`¡Bienvenido ${data.data.user.nombreCompleto}!`, 'success');
+
+          // Esperar 1 segundo y redireccionar
+          setTimeout(() => {
+            redirectByRole(data.data.user.rol);
+          }, 1000);
+        } else {
+          throw new Error('Respuesta del servidor inválida');
+        }
+
+      } catch (error) {
+        console.error('Error durante login:', error);
+
+        let errorMessage = 'Error al iniciar sesión. ';
+
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage += 'No se puede conectar con el servidor. Verifica que esté ejecutándose.';
+        } else if (error.message.includes('credenciales')) {
+          errorMessage += 'Usuario o contraseña incorrectos.';
+        } else {
+          errorMessage += error.message || 'Intenta nuevamente.';
+        }
+
+        showAlert(errorMessage, 'error');
+        setLoading(false);
+
+        // Limpiar contraseña en caso de error
+        passwordInput.value = '';
+        passwordInput.focus();
+      }
+    });
+
+    // Manejar Enter en inputs
+    usuarioInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        passwordInput.focus();
+      }
+    });
+
+    // Auto-focus en el campo de usuario al cargar
+    window.addEventListener('load', () => {
+      usuarioInput.focus();
+    });
+  </script>
+</body>
+
+</html>
