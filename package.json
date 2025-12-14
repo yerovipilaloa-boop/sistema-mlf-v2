@@ -1,0 +1,14 @@
+{
+    "name": "sistema-mlf-root",
+    "version": "2.0.0",
+    "description": "Proxy root for Hostinger Deployment",
+    "scripts": {
+        "install-backend": "cd backend && npm install",
+        "build": "cd backend && npm run build",
+        "start": "cd backend && npm start"
+    },
+    "dependencies": {},
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}
