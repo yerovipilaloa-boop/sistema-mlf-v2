@@ -54,7 +54,11 @@ export class ForbiddenError extends AppError {
  * Error 404 - Not Found
  */
 export class NotFoundError extends AppError {
-  constructor(message: string = 'Recurso no encontrado') {
+  constructor(entityOrMessage: string = 'Recurso no encontrado', entityId?: string | number) {
+    let message = entityOrMessage;
+    if (entityId !== undefined) {
+      message = `${entityOrMessage} con ID ${entityId} no encontrado`;
+    }
     super(message, 404);
   }
 }
