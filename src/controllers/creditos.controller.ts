@@ -59,8 +59,8 @@ export const aprobarCredito = async (
       {
         creditoId: parseInt(id, 10),
         observaciones,
-      },
-      req.user?.id
+        aprobadoPorId: req.user?.id
+      }
     );
 
     sendSuccess(res, credito, 'Crédito aprobado exitosamente');
@@ -106,8 +106,8 @@ export const desembolsarCredito = async (
         fechaDesembolso: fechaDesembolsoProcessed,
         tasaInteresAnual: parseFloat(tasaInteresAnual),
         observaciones,
-      },
-      req.user?.id
+        desembolsadoPorId: req.user?.id
+      }
     );
 
     sendSuccess(res, resultado, 'Crédito desembolsado exitosamente');
@@ -137,8 +137,8 @@ export const rechazarCredito = async (
       {
         creditoId: parseInt(id, 10),
         motivoRechazo,
-      },
-      req.user?.id
+        rechazadoPorId: req.user?.id
+      }
     );
 
     sendSuccess(res, credito, 'Crédito rechazado');

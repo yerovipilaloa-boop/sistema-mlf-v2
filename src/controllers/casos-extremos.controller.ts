@@ -18,7 +18,7 @@
  */
 
 import { Response, NextFunction } from 'express';
-import { casosExtremosService } from '../services/casos-extremos.service';
+import casosExtremosService from '../services/casos-extremos.service';
 import { AuthenticatedRequest } from '../types/auth.types';
 import { sendSuccess } from '../utils/api-response';
 
