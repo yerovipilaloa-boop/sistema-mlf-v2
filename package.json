@@ -1,14 +1,63 @@
 {
-    "name": "sistema-mlf-root",
-    "version": "2.0.0",
-    "description": "Proxy root for Hostinger Deployment",
-    "scripts": {
-        "install-backend": "cd backend && npm install",
-        "build": "cd backend && npm run build",
-        "start": "cd backend && npm start"
-    },
-    "dependencies": {},
-    "engines": {
-        "node": ">=18.0.0"
-    }
+  "name": "mlf-backend",
+  "version": "1.0.0",
+  "description": "Backend API para Sistema My Libertad Financiera",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "keywords": [
+    "cooperativa",
+    "creditos",
+    "finanzas",
+    "mlf"
+  ],
+  "author": "MLF Team",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^5.7.1",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.11",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^20.10.6",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.1.1",
+    "prisma": "^5.7.1",
+    "ts-jest": "^29.1.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
 }

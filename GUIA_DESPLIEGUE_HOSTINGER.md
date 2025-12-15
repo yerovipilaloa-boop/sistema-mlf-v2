@@ -1,59 +1,55 @@
-# Guía de Despliegue en Hostinger (2025 Actualizada) 🚀
+# Guía de Despliegue en Hostinger (Plan Cloud Startup) ☁️🚀
 
-Esta guía aprovecha las nuevas funciones de Hostinger (hPanel) para un despliegue rápido y sin comandos complejos.
+Esta guía es específica para tu plan **Cloud Startup**, que soporta aplicaciones Node.js de forma nativa.
 
-## 1. Preparación del Entorno (En el Panel de Hostinger)
-
-Antes de subir nada, asegúrate de tener esto configurado en tu hPanel:
-
-1.  **Base de Datos**:
-    *   Ve a **Base de Datos MySQL** y crea una nueva (anota Nombre, Usuario y Contraseña).
-    *   Importante: El "Host" suele ser `localhost` o `127.0.0.1`.
-
-2.  **Configuración Node.js (App)**:
-    *   Ve a la sección **Sitio Web** -> **Node.js**.
-    *   **Versión Node.js**: Selecciona **v18** o **v20** (LTS).
-    *   **Application Startup File**: Escribe `dist/server.js`.
-        *   *¿Por qué?* Porque el código real (compilado) vive en la carpeta `dist`.
-    *   **Application Root**: Déjalo como está (normalmente `domains/tudominio.com/public_html`).
-
-3.  **Variables de Entorno (Crucial)**:
-    *   En la misma pantalla de Node.js, busca la sección de **Variables de Entorno**.
-    *   Agrega una por una las mismas que tienes en tu `.env` local, pero con los datos de **Producción** (usando la BD que creaste en el paso 1):
-        *   `PORT`: `8080` (o dejalo vacío si Hostinger lo asigna, pero `3000` NO funcionará).
-        *   `DATABASE_URL`: `mysql://USUARIO_DB:PASSWORD_DB@localhost:3306/NOMBRE_DB`
-        *   `JWT_SECRET`: (Tu secreto largo y seguro)
-
-## 2. Flujo de Despliegue (Día a Día) 🔄
-
-### Paso 1: En tu PC (Subir cambios)
-1.  Haz tus cambios en el código.
-2.  Ejecuta: `npm run build` (para verificar que no hay errores graves).
-3.  Sube a GitHub:
-    ```bash
-    git add .
-    git commit -m "Mejoras listas"
-    git push origin main
-    ```
-
-### Paso 2: En Hostinger (Actualizar)
-1.  Ve a **Sitio Web** -> **GIT**.
-2.  Busca tu repositorio y dale al botón **"DEPLOY"** (o "Actualizar Archivos").
-    *   *Esto baja lo último de GitHub.*
-3.  Ve a **Sitio Web** -> **Node.js**.
-4.  Haz clic en **"NPM INSTALL"** (solo si instalaste librerías nuevas).
-5.  Haz clic en **"RESTART"**.
-
-**¡Listo!** En unos segundos tu sitio debería estar actualizado.
+## ⚠️ IMPORTANTE: El "Truco" del Tipo de Sitio
+No puedes usar un sitio web "Estándar" (PHP). Debes crear una "Web App".
+Si ya creaste `proyectomlf.com` como sitio normal, es posible que debas borrarlo y recrearlo, O usar la opción de "Crear Nuevo Sitio" y seleccionar el tipo correcto.
 
 ---
 
-## 3. ¿La Base de Datos cambió? (Prisma)
-Si modificaste el archivo `schema.prisma` (nuevas tablas o columnas), el botón "Deploy" NO actualiza la BD automáticamente.
+## 1. Crear la Aplicación Node.js (Correctamente)
 
-**Solución Rápida (SSH):**
-Solo en este caso necesitas la terminal (o "Terminal SSH" en el panel):
-1.  Entra a la terminal.
-2.  Ve a tu carpeta: `cd domains/tudominio.com/public_html` (aprox).
-3.  Ejecuta: `npx prisma db push`
-4.  Reinicia el servidor Node.js desde el panel.
+1.  Ve al **Inicio** (Home) de Hostinger.
+2.  Haz clic en **Sitios web** -> **Agregar sitio web** (Add Website).
+3.  Tipo de sitio: Elige **"Business"** o **"Web App"** (Busca la opción que diga **Node.js** explícitamente en el asistente).
+    *   *Si te pregunta "¿Qué deseas crear?", elige "Aplicación Web".*
+4.  Conecta tu dominio (`proyectomlf.com`).
+
+## 2. Configuración del Entorno (Panel de la App)
+
+Una vez creada como Web App, verás opciones diferentes. Busca **"Configuración de Node.js"**:
+
+1.  **Versión Node.js**: Selecciona **v18** o **v20**.
+2.  **App Startup File**: `dist/server.js` (¡Muy importante!).
+3.  **Build Command**: `npm run build`
+4.  **Package Manager**: `npm`.
+
+## 3. Variables de Entorno (.env)
+
+En la misma sección de configuración, busca **"Environment Variables"** y pega tus claves:
+*   `PORT`: `8080` (Hostinger suele asignar este, o el `3000`).
+*   `DATABASE_URL`: Tu conexión MySQL `mysql://usuario:pass@localhost:3306/db`.
+*   `JWT_SECRET`: Tu clave secreta.
+
+## 4. Despliegue con un Clic (Git)
+
+1.  Ve a la sección **"Deployment"** o **"Git"**.
+2.  Conecta tu repositorio: `yerovipilaloa-boop/sistema-mlf-v2`.
+    *   Rama: `main`.
+3.  Activa "Auto-Deploy" si está disponible.
+4.  Haz clic en **"Deploy"**.
+
+Hostinger se encargará de:
+1.  Clonar el código.
+2.  Instalar dependencias (`npm install`).
+3.  Compilar (`npm run build`).
+4.  Iniciar el servidor (`dist/server.js`).
+
+---
+
+## Solución de Problemas Comunes
+
+*   **Error 404 / 502**: Significa que el servidor no inició. Revisa la pestaña "Logs" o "Monitor".
+*   **Database Error**: Verifica que la `DATABASE_URL` sea correcta y que la IP de la base de datos sea accesible (normalmente `localhost` o `127.0.0.1` en planes Cloud).
+
