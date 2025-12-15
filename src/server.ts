@@ -28,7 +28,7 @@ const startServer = async (): Promise<void> => {
     await connectDatabase();
 
     // 3. Iniciar servidor Express
-    const server = app.listen(config.port, () => {
+    const server = app.listen(config.port, '0.0.0.0', () => {
       logger.info(`✓ Servidor corriendo en puerto ${config.port}`);
       logger.info(`✓ Entorno: ${config.nodeEnv}`);
       logger.info(`✓ API Version: ${config.apiVersion}`);

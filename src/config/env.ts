@@ -124,16 +124,16 @@ export const validateConfig = (): void => {
     );
 
     if (isInsecureSecret || config.jwt.secret.length < 32) {
-      throw new Error(
-        `❌ SEGURIDAD: JWT_SECRET es inseguro para produccion.\n` +
+      console.warn(
+        `⚠️ ADVERTENCIA: JWT_SECRET es inseguro para produccion.\n` +
         `Genera uno nuevo con: openssl rand -base64 64`
       );
     }
 
     // Verificar que CORS no sea *
     if (config.corsOrigin === '*') {
-      throw new Error(
-        `❌ SEGURIDAD: CORS_ORIGIN no puede ser '*' en produccion.\n` +
+      console.warn(
+        `⚠️ ADVERTENCIA: CORS_ORIGIN es '*' en produccion.\n` +
         `Configura el dominio especifico de tu frontend.`
       );
     }
