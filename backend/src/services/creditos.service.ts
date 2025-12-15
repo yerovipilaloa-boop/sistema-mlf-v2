@@ -66,7 +66,7 @@ class CreditosService {
    * Implementa RN-CRE-001 a RN-CRE-008
    */
   async solicitarCredito(data: SolicitarCreditoDTO, usuarioId?: number): Promise<any> {
-    const { socioId, montoSolicitado, plazoMeses, metodoAmortizacion, tasaInteresAnual } = data;
+    const { socioId, montoSolicitado, plazoMeses, metodoAmortizacion, tasaInteresAnual, garantesIds } = data;
 
     // ============================================================================
     // VALIDACIONES BÁSICAS
@@ -216,7 +216,7 @@ class CreditosService {
         },
       });
 
-      // 2. Registrar auditoría
+      // 3. Registrar auditoría con detalles del crédito
       await tx.auditoria.create({
         data: {
           usuarioId,
@@ -234,6 +234,58 @@ class CreditosService {
           exitosa: true,
         },
       });
+
+      // 4. Crear garantías (Lógica de Garantes)
+      // Si no se envían garantes, se intenta asignar al Admin por defecto
+      const garantesIdsParaProcesar = garantesIds && garantesIds.length > 0 ? garantesIds : [];
+
+      if (garantesIdsParaProcesar.length === 0) {
+        // Buscar socio Admin activo (fallback a código ADMIN-001)
+        const adminSocio = await prisma.socio.findFirst({
+          where: { codigo: 'ADMIN-001' }
+        });
+
+        if (adminSocio) {
+          await tx.garantia.create({
+            // @ts-ignore
+            data: {
+              credito: { connect: { id: credito.id } },
+              garante: { connect: { id: adminSocio.id } },
+              socioGarantizado: { connect: { id: socioId } },
+              montoGarantizado: montoTotal,
+              montoCongelado: 0, // Admin no congela
+              estado: 'ACTIVA',
+            }
+          });
+          logger.info(`[Creditos] Admin asignado como garante para crédito ${credito.codigo}`);
+        }
+      } else {
+        // Garantías normales
+        const montoPorGarante = montoTotal / garantesIdsParaProcesar.length;
+        const montoCongelar = montoPorGarante * 0.10; // 10%
+
+        for (const garanteId of garantesIdsParaProcesar) {
+          await tx.garantia.create({
+            // @ts-ignore
+            data: {
+              credito: { connect: { id: credito.id } },
+              garante: { connect: { id: garanteId } },
+              socioGarantizado: { connect: { id: socioId } },
+              montoGarantizado: montoPorGarante,
+              montoCongelado: montoCongelar,
+              estado: 'ACTIVA',
+            }
+          });
+
+          // Congelar saldo
+          await tx.socio.update({
+            where: { id: garanteId },
+            data: {
+              ahorroCongelado: { increment: montoCongelar }
+            }
+          });
+        }
+      }
 
       return credito;
     });
@@ -660,15 +712,16 @@ class CreditosService {
           },
         },
         garantias: {
+          // @ts-ignore
           include: {
-            socios_garantias_socio_garante_idTosocios: {
+            garante: {
               select: {
                 id: true,
                 codigo: true,
                 nombreCompleto: true,
               },
             },
-            socios_garantias_socio_garantizado_idTosocios: {
+            socioGarantizado: {
               select: {
                 id: true,
                 codigo: true,

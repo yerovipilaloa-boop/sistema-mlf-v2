@@ -82,8 +82,13 @@ class UtilidadesService {
     this.validarPeriodo(año, semestre);
 
     // Verificar que no exista cálculo previo para este período
-    const existente = await prisma.utilidad.findFirst({
-      where: { a_o: año, semestre },
+    const existente = await prisma.utilidad.findUnique({
+      where: {
+        a_o_semestre: {
+          a_o: año,
+          semestre,
+        },
+      },
     });
 
     if (existente) {
@@ -114,7 +119,7 @@ class UtilidadesService {
             tipo: {
               in: [TipoTransaccion.DEPOSITO_AHORRO, TipoTransaccion.RETIRO_AHORRO],
             },
-            estado: 'COMPLETADA',
+            // estado: 'COMPLETADA', // Eliminado, no existe en el esquema
             fechaTransaccion: {
               gte: fechaInicio,
               lte: fechaFin,
@@ -251,7 +256,7 @@ class UtilidadesService {
       include: {
         detalles: {
           include: {
-            socio: true,
+            socios: true,
           },
         },
       },
@@ -300,13 +305,12 @@ class UtilidadesService {
             data: {
               codigo: codigoTransaccion,
               tipo: TipoTransaccion.UTILIDAD,
-              socioId: detalle.socioId,
+              socio: { connect: { id: detalle.socioId } }, // Corregido: usar connect
               monto: detalle.montoUtilidad,
-              metodoPago: 'AUTOMATICO',
+              metodo: 'AUTOMATICO', // Corregido metodoPago -> metodo
               concepto: `Utilidades ${utilidad.codigo} - 1% sobre ahorro promedio`,
-              estado: 'COMPLETADA',
+              // estado: 'COMPLETADA', // Eliminado
               fechaTransaccion: new Date(),
-              creadoPor: usuarioId || null,
             },
           });
 
@@ -417,7 +421,7 @@ class UtilidadesService {
             TipoTransaccion.UTILIDAD,
           ],
         },
-        estado: 'COMPLETADA',
+        // estado: 'COMPLETADA', // Eliminado, campo no existe
         fechaTransaccion: {
           lte: ultimoDia,
         },

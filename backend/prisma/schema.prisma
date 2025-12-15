@@ -63,6 +63,7 @@ model Socio {
   voto_confianza                                                Boolean?             @default(false)
   usuario                                                       String?              @unique @db.VarChar(50)
   passwordHash                                                  String               @map("password_hash") @db.VarChar(255)
+  observaciones                                                 String?              @db.Text
   rol                                                           RolSocio             @default(SOCIO)
   fechaRegistro                                                 DateTime             @default(now()) @map("fecha_registro") @db.Timestamp(6)
   createdAt                                                     DateTime             @default(now()) @map("created_at") @db.Timestamp(6)
@@ -78,8 +79,8 @@ model Socio {
   dashboard_metricas                                            DashboardMetrica[]
   fondo_seguro_fondo_seguro_registrado_por_idTosocios           FondoSeguro[]        @relation("fondo_seguro_registrado_por_idTosocios")
   fondo_seguro_fondo_seguro_socio_idTosocios                    FondoSeguro[]        @relation("fondo_seguro_socio_idTosocios")
-  garantias_garantias_socio_garante_idTosocios                  Garantia[]           @relation("garantias_socio_garante_idTosocios")
-  garantias_garantias_socio_garantizado_idTosocios              Garantia[]           @relation("garantias_socio_garantizado_idTosocios")
+  garantiasOtorgadas                             Garantia[]           @relation("garantias_socio_garante_idTosocios")
+  garantiasRecibidas                             Garantia[]           @relation("garantias_socio_garantizado_idTosocios")
   liberaciones_garantia                                         LiberacionGarantia[]
   notificaciones_notificaciones_creada_por_idTosocios           Notificacion[]       @relation("notificaciones_creada_por_idTosocios")
   notificaciones                                                Notificacion[]
@@ -137,6 +138,7 @@ model Credito {
   fechaAprobacion      DateTime?     @map("fecha_aprobacion") @db.Timestamp(6)
   fechaDesembolso      DateTime?     @map("fecha_desembolso") @db.Timestamp(6)
   fecha_finalizacion   DateTime?     @db.Timestamp(6)
+  observaciones        String?       @db.Text
   createdAt            DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt            DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
   comprobantes         Comprobante[]
@@ -259,8 +261,8 @@ model Garantia {
   createdAt                                     DateTime             @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt                                     DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
   credito                                       Credito              @relation(fields: [creditoId], references: [id], onUpdate: NoAction)
-  socios_garantias_socio_garante_idTosocios     Socio                @relation("garantias_socio_garante_idTosocios", fields: [socio_garante_id], references: [id], onUpdate: NoAction)
-  socios_garantias_socio_garantizado_idTosocios Socio                @relation("garantias_socio_garantizado_idTosocios", fields: [socio_garantizado_id], references: [id], onUpdate: NoAction)
+  garante                                       Socio                @relation("garantias_socio_garante_idTosocios", fields: [socio_garante_id], references: [id], onUpdate: NoAction)
+  socioGarantizado                              Socio                @relation("garantias_socio_garantizado_idTosocios", fields: [socio_garantizado_id], references: [id], onUpdate: NoAction)
   liberaciones                                  LiberacionGarantia[]
 
   @@index([creditoId], map: "idx_garantias_credito")

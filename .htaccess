@@ -1,0 +1,14 @@
+PassengerAppRoot "/home/u123456789/domains/proyectomlf.com/public_html"
+PassengerAppType node
+PassengerStartupFile backend/dist/server.js
+PassengerNodejs "C:\Program Files\nodejs\node.exe" 
+# Nota: La ruta de Nodejs y AppRoot deben ajustarse a la real del servidor Hostinger
+# Esta configuración asume que la app corre desde backend/dist/server.js
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^$ http://127.0.0.1:3000/ [P,L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
+</IfModule>

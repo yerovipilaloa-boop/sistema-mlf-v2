@@ -85,6 +85,10 @@ export enum TipoTransaccion {
   DESEMBOLSO = 'DESEMBOLSO',
   CONGELAMIENTO = 'CONGELAMIENTO',
   DESCONGELAMIENTO = 'DESCONGELAMIENTO',
+  // Nuevos tipos detectados en uso
+  DEPOSITO_AHORRO = 'DEPOSITO_AHORRO',
+  RETIRO_AHORRO = 'RETIRO_AHORRO',
+  DEPOSITO_INICIAL = 'DEPOSITO_INICIAL',
 }
 
 export enum MetodoPago {
@@ -193,6 +197,7 @@ export interface SolicitarCreditoDTO {
   metodoAmortizacion: MetodoAmortizacion;
   tasaInteresAnual?: number; // Tasa de interés anual (ej: 18 para 18%)
   observaciones?: string;
+  garantesIds?: number[];
 }
 
 export interface RegistrarPagoDTO {

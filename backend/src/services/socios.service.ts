@@ -208,6 +208,18 @@ class SociosService {
           );
         }
       }
+
+      // Validar límite de 3 recomendados (RN-SOC-008)
+      // Esta validación reemplaza al trigger 'after_insert_socio_validar_recomendadores'
+      const recomendacionesDadas = await prisma.recomendacion.count({
+        where: { socioRecomendadorId: recomendadorId },
+      });
+
+      if (recomendacionesDadas >= 3) {
+        throw new SocioBusinessError(
+          `El recomendador ${recomendador.nombreCompleto} ha alcanzado el límite de 3 recomendaciones permitidas (RN-SOC-008)`
+        );
+      }
     }
 
     // ============================================================================
@@ -225,8 +237,7 @@ class SociosService {
 
     const nuevoSocio = await prisma.$transaction(async (tx) => {
       // 0. Deshabilitar temporalmente triggers problemáticos
-      await tx.$executeRawUnsafe('ALTER TABLE socios DISABLE TRIGGER after_insert_socio_validar_recomendadores');
-      await tx.$executeRawUnsafe('ALTER TABLE transacciones DISABLE TRIGGER before_insert_transaccion_actualizar_saldo');
+      // 0. Triggers deshabilitados (Manejado por lógica de aplicación)
 
       // 1. Crear socio
       // Si el admin especificó una etapa, usarla; si no, por defecto Etapa 1 (Iniciante)
@@ -298,8 +309,7 @@ class SociosService {
       });
 
       // 5. Rehabilitar triggers
-      await tx.$executeRawUnsafe('ALTER TABLE socios ENABLE TRIGGER after_insert_socio_validar_recomendadores');
-      await tx.$executeRawUnsafe('ALTER TABLE transacciones ENABLE TRIGGER before_insert_transaccion_actualizar_saldo');
+      // 5. Triggers rehabilitados (Manejado por lógica de aplicación)
 
       return socio;
     });
@@ -671,7 +681,7 @@ class SociosService {
           saldoAnterior: socio.ahorroActual,
           saldoNuevo: 0, // El trigger lo calculará
           metodo,
-          numeroReferencia,
+          referencia_externa: numeroReferencia,
           concepto: concepto || 'Depósito de ahorro',
         },
       });
@@ -758,7 +768,7 @@ class SociosService {
           saldoAnterior: socio.ahorroActual,
           saldoNuevo: 0, // El trigger lo calculará
           metodo,
-          numeroReferencia,
+          referencia_externa: numeroReferencia,
           concepto: concepto || 'Retiro de ahorro',
         },
       });
@@ -869,8 +879,15 @@ class SociosService {
       throw new BadRequestError('El socio ya está suspendido');
     }
 
-    // Verificar que no tenga créditos activos
-    if (socio.creditosActivos > 0) {
+    // Verificar que no tenga créditos activos (Desembolsados y no pagados)
+    const creditosActivos = await prisma.credito.count({
+      where: {
+        socioId,
+        estado: 'DESEMBOLSADO', // O cualquier estado que implique deuda viva
+      },
+    });
+
+    if (creditosActivos > 0) {
       throw new SocioBusinessError(
         'No se puede suspender un socio con créditos activos'
       );
@@ -881,8 +898,8 @@ class SociosService {
         where: { id: socioId },
         data: {
           estado: 'INACTIVO',
-          fechaSuspension: new Date(),
-          motivoSuspension: motivo,
+          // fechaSuspension y motivoSuspension no existen en el modelo Socio actual
+          // La auditoría registra el motivo
         },
       });
 
@@ -928,8 +945,7 @@ class SociosService {
         where: { id: socioId },
         data: {
           estado: 'ACTIVO',
-          fechaSuspension: null,
-          motivoSuspension: null,
+          // Campos de suspensión removidos del modelo
         },
       });
 
