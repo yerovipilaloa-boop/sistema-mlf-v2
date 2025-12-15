@@ -14,7 +14,7 @@ frontend/node_modules/
 /dist
 /build
 /out
-backend/dist/
+# backend/dist/
 
 # Logs
 logs
