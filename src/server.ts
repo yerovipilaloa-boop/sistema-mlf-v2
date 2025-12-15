@@ -28,11 +28,14 @@ const startServer = async (): Promise<void> => {
     await connectDatabase();
 
     // 3. Iniciar servidor Express
-    const server = app.listen(config.port, '0.0.0.0', () => {
-      logger.info(`✓ Servidor corriendo en puerto ${config.port}`);
+    // Hostinger a veces requiere 8080 o 3000. Forzamos un puerto seguro si no viene definido.
+    const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
+
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      logger.info(`✓ Servidor corriendo en puerto ${PORT}`);
       logger.info(`✓ Entorno: ${config.nodeEnv}`);
       logger.info(`✓ API Version: ${config.apiVersion}`);
-      logger.info(`✓ Health check: http://localhost:${config.port}/health`);
+      logger.info(`✓ Health check: http://localhost:${PORT}/health`);
       logger.info('='.repeat(70));
     });
 
