@@ -2,11 +2,11 @@
   "name": "mlf-backend",
   "version": "1.0.0",
   "description": "Backend API para Sistema My Libertad Financiera",
-  "main": "dist/server.js",
+  "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "echo 'Build OK'",
-    "start": "node test-server.js",
+    "start": "node index.js",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "prisma:generate": "prisma generate",
