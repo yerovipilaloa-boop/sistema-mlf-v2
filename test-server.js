@@ -1,10 +1,26 @@
+// MLF Test Server - Debug Version
+// Ultra simple server to test Hostinger Node.js support
+
+console.log('='.repeat(50));
+console.log('[DEBUG] Starting test-server.js');
+console.log('[DEBUG] Node version:', process.version);
+console.log('[DEBUG] Platform:', process.platform);
+console.log('[DEBUG] CWD:', process.cwd());
+console.log('[DEBUG] ENV PORT:', process.env.PORT);
+console.log('='.repeat(50));
+
 const http = require('http');
 
-const PORT = process.env.PORT || 8080;
+// Try multiple ports - Hostinger might require a specific one
+const PORT = process.env.PORT || 3000;
+
+console.log(`[DEBUG] Will listen on port: ${PORT}`);
 
 const server = http.createServer((req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(`
+  console.log(`[DEBUG] Request received: ${req.method} ${req.url}`);
+
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+  res.end(`
     <!DOCTYPE html>
     <html>
     <head>
@@ -44,6 +60,7 @@ const server = http.createServer((req, res) => {
         <p>Node.js está funcionando correctamente en Hostinger</p>
         <div class="status">✅ Servidor Activo en Puerto ${PORT}</div>
         <p style="margin-top: 30px; font-size: 0.9em;">
+          Node: ${process.version}<br>
           Timestamp: ${new Date().toISOString()}
         </p>
       </div>
@@ -52,6 +69,16 @@ const server = http.createServer((req, res) => {
   `);
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Test server running on port ${PORT}`);
+server.on('error', (err) => {
+  console.error('[ERROR] Server error:', err.message);
+  console.error('[ERROR] Full error:', err);
 });
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log('='.repeat(50));
+  console.log(`[SUCCESS] Server is running!`);
+  console.log(`[SUCCESS] Listening on 0.0.0.0:${PORT}`);
+  console.log('='.repeat(50));
+});
+
+console.log('[DEBUG] Script execution completed, waiting for server to start...');
