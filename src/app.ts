@@ -56,6 +56,22 @@ app.use(
 );
 
 // ============================================================================
+// ARCHIVOS ESTÁTICOS DEL FRONTEND
+// ============================================================================
+
+import path from 'path';
+
+// Servir archivos estáticos desde la carpeta public
+// En desarrollo: src/public, En producción: dist/public
+const publicPath = path.join(__dirname, 'public');
+app.use(express.static(publicPath));
+
+// Servir index.html por defecto en la raíz
+app.get('/', (req, res) => {
+  res.sendFile(path.join(publicPath, 'login.html'));
+});
+
+// ============================================================================
 // RUTAS DE SALUD Y ESTADO
 // ============================================================================
 
@@ -68,7 +84,8 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
-app.get('/', (req: Request, res: Response) => {
+// API info endpoint (movido a /api para no conflictar con frontend)
+app.get('/api', (req: Request, res: Response) => {
   res.status(200).json({
     message: 'API Sistema MLF - My Libertad Financiera',
     version: config.apiVersion,
