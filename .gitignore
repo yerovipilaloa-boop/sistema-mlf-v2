@@ -9,6 +9,7 @@ frontend/node_modules/
 !.env.example
 !.env.production.example
 !.env.hostinger.example
+!.env.hostinger
 
 # Build outputs
 /dist
