@@ -117,10 +117,11 @@ export const validateConfig = (): void => {
   const missing = requiredVars.filter(key => !process.env[key]);
 
   if (missing.length > 0) {
-    throw new Error(
-      `❌ Variables de entorno requeridas faltantes: ${missing.join(', ')}\n` +
-      `Por favor, copia .env.example a .env y configura las variables.`
-    );
+    console.warn('='.repeat(60));
+    console.warn(`⚠️ ADVERTENCIA: Variables de entorno faltantes: ${missing.join(', ')}`);
+    console.warn('El servidor usará valores de fallback.');
+    console.warn('Para producción, configura estas variables en el panel de Hostinger.');
+    console.warn('='.repeat(60));
   }
 
   // Validaciones de seguridad SOLO en produccion
