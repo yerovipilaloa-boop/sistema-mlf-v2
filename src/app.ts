@@ -60,15 +60,37 @@ app.use(
 // ============================================================================
 
 import path from 'path';
+import fs from 'fs';
 
 // Servir archivos estáticos desde la carpeta public
-// En desarrollo: src/public, En producción: dist/public
+// En producción, __dirname es dist/, así que public debe estar en dist/public
 const publicPath = path.join(__dirname, 'public');
+
+// Debug: Log del path de archivos estáticos
+console.log('📁 Static files path:', publicPath);
+console.log('📁 __dirname:', __dirname);
+console.log('📁 Public folder exists:', fs.existsSync(publicPath));
+if (fs.existsSync(publicPath)) {
+  console.log('📁 Contents:', fs.readdirSync(publicPath));
+}
+
 app.use(express.static(publicPath));
 
-// Servir index.html por defecto en la raíz
+// Servir login.html por defecto en la raíz
 app.get('/', (req, res) => {
-  res.sendFile(path.join(publicPath, 'login.html'));
+  const loginPath = path.join(publicPath, 'login.html');
+  console.log('📄 Serving login.html from:', loginPath);
+  console.log('📄 File exists:', fs.existsSync(loginPath));
+  if (fs.existsSync(loginPath)) {
+    res.sendFile(loginPath);
+  } else {
+    res.status(200).json({
+      message: 'API Sistema MLF - Frontend not found',
+      publicPath: publicPath,
+      loginPath: loginPath,
+      dirExists: fs.existsSync(publicPath),
+    });
+  }
 });
 
 // ============================================================================
