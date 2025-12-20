@@ -19,9 +19,9 @@ export enum EstadoSocio {
 }
 
 export enum RolSocio {
-  ADMIN = 'ADMIN',
-  OPERADOR = 'OPERADOR',
   SOCIO = 'SOCIO',
+  TESORERO = 'TESORERO',
+  ADMIN = 'ADMIN',
 }
 
 export enum EtapaSocio {
@@ -64,10 +64,8 @@ export enum ClasificacionMora {
 export enum EstadoGarantia {
   PENDIENTE = 'PENDIENTE',
   ACTIVA = 'ACTIVA',
-  EN_LIBERACION = 'EN_LIBERACION',
-  LIBERADA = 'LIBERADA',
   EJECUTADA = 'EJECUTADA',
-  CANCELADA = 'CANCELADA',
+  LIBERADA = 'LIBERADA',
 }
 
 export enum EstadoLiberacionGarantia {
