@@ -66,17 +66,22 @@ interface DetectarFraudeDTO {
 
 interface RefinanciarCreditoDTO {
   creditoId: number;
-  nuevoPlazoMeses: number;
+  nuevoPlazoMeses?: number;
   nuevaTasaInteres?: number;
-  motivoRefinanciamiento: string;
+  nuevaTasaAnual?: number; // Alias for nuevaTasaInteres
+  porcentajeQuita?: number;
+  motivoRefinanciamiento?: string;
+  motivoRefinanciacion?: string; // Alias for motivoRefinanciamiento
   quitas?: number; // Monto a condonar
+  requiereAprobacion?: boolean;
 }
 
 interface CondonarDeudaDTO {
   creditoId: number;
-  montoCondonado: number;
+  montoCondonado?: number;
+  porcentajeCondonacion?: number; // Percentage to waive
   motivo: string;
-  autorizadoPor: number; // ID del admin que autoriza
+  autorizadoPor: number | string; // ID del admin que autoriza
 }
 
 // ============================================================================

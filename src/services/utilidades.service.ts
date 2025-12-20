@@ -301,15 +301,25 @@ class UtilidadesService {
             detalle.socioId,
             tx
           );
+
+          // Get current ahorro to calculate saldo
+          const socioData = await tx.socio.findUnique({
+            where: { id: detalle.socioId },
+            select: { ahorroActual: true }
+          });
+          const saldoAnterior = socioData?.ahorroActual.toNumber() || 0;
+          const saldoNuevo = saldoAnterior + detalle.montoUtilidad.toNumber();
+
           await tx.transaccion.create({
             data: {
               codigo: codigoTransaccion,
               tipo: TipoTransaccion.UTILIDAD,
-              socio: { connect: { id: detalle.socioId } }, // Corregido: usar connect
+              socio: { connect: { id: detalle.socioId } },
               monto: detalle.montoUtilidad,
-              metodo: 'AUTOMATICO', // Corregido metodoPago -> metodo
+              saldoAnterior: saldoAnterior,
+              saldoNuevo: saldoNuevo,
+              metodo: 'AUTOMATICO',
               concepto: `Utilidades ${utilidad.codigo} - 1% sobre ahorro promedio`,
-              // estado: 'COMPLETADA', // Eliminado
               fechaTransaccion: new Date(),
             },
           });

@@ -45,9 +45,10 @@ interface AprobarCreditoDTO {
 
 interface DesembolsarCreditoDTO {
   creditoId: number;
-  desembolsadoPorId: number;
+  desembolsadoPorId?: number;
   fechaDesembolso?: Date;
   tasaInteresAnual?: number; // Tasa de interés anual (ej: 18 para 18%)
+  observaciones?: string;
 }
 
 interface RechazarCreditoDTO {

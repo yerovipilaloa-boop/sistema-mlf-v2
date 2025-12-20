@@ -196,6 +196,7 @@ export interface SolicitarCreditoDTO {
   tasaInteresAnual?: number; // Tasa de interés anual (ej: 18 para 18%)
   observaciones?: string;
   garantesIds?: number[];
+  proposito?: string; // Purpose of the credit request
 }
 
 export interface RegistrarPagoDTO {

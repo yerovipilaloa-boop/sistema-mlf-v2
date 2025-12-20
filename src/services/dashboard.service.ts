@@ -472,7 +472,7 @@ class DashboardService {
           const diasMora = Math.floor(
             (hoy.getTime() -
               new Date(cuotaMasAntigua.fechaVencimiento).getTime()) /
-              (1000 * 60 * 60 * 24)
+            (1000 * 60 * 60 * 24)
           );
 
           const monto = credito.saldo_capital.toNumber();
@@ -818,18 +818,18 @@ class DashboardService {
       // Pagos en el período
       const pagos = await prisma.pago.findMany({
         where: {
-          fecha: {
+          fechaPago: {
             gte: fechaInicio,
             lte: fechaFin,
           },
         },
         select: {
-          monto: true,
-          fecha: true,
+          monto_pago: true,
+          fechaPago: true,
         },
       });
 
-      const totalPagos = pagos.reduce((acc, p) => acc + p.monto.toNumber(), 0);
+      const totalPagos = pagos.reduce((acc, p) => acc + p.monto_pago.toNumber(), 0);
 
       // Créditos desembolsados en el período
       const creditosDesembolsados = await prisma.credito.count({
@@ -844,7 +844,7 @@ class DashboardService {
       // Nuevos socios en el período
       const nuevosSocios = await prisma.socio.count({
         where: {
-          fechaIngreso: {
+          fechaRegistro: {
             gte: fechaInicio,
             lte: fechaFin,
           },

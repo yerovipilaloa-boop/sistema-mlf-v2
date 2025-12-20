@@ -84,7 +84,7 @@ export const requireAdminOrOperator = (
     throw new UnauthorizedError('Usuario no autenticado');
   }
 
-  if (req.user.role !== 'ADMIN' && req.user.role !== 'OPERADOR' && req.user.role !== 'TESORERO') {
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'TESORERO') {
     throw new ForbiddenError('Se requieren permisos de administrador u operador');
   }
 

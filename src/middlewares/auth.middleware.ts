@@ -65,7 +65,7 @@ export const authorize = (...rolesPermitidos: RolSocio[]) => {
       if (!rolesPermitidos.includes(req.user.rol)) {
         logger.warn(
           `Usuario ${req.user.codigo} intentó acceder sin permisos. ` +
-            `Rol requerido: ${rolesPermitidos.join(', ')}, Rol actual: ${req.user.rol}`
+          `Rol requerido: ${rolesPermitidos.join(', ')}, Rol actual: ${req.user.rol}`
         );
         throw new ForbiddenError(
           'No tienes permisos suficientes para realizar esta acción'
@@ -91,7 +91,7 @@ export const requireAdmin = authorize(RolSocio.ADMIN);
 /**
  * Middleware para verificar que el usuario sea ADMIN u OPERADOR
  */
-export const requireAdminOrOperator = authorize(RolSocio.ADMIN, RolSocio.OPERADOR);
+export const requireAdminOrOperator = authorize(RolSocio.ADMIN, RolSocio.TESORERO);
 
 /**
  * Middleware para verificar que el usuario acceda solo a sus propios recursos
@@ -107,7 +107,7 @@ export const requireOwnerOrAdmin = (idParamName: string = 'id') => {
       const resourceId = parseInt(req.params[idParamName], 10);
 
       // Admin y Operador pueden acceder a cualquier recurso
-      if (req.user.rol === RolSocio.ADMIN || req.user.rol === RolSocio.OPERADOR) {
+      if (req.user.rol === RolSocio.ADMIN || req.user.rol === RolSocio.TESORERO) {
         return next();
       }
 
