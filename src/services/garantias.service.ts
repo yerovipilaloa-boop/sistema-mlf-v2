@@ -260,7 +260,7 @@ class GarantiasService {
         credito: {
           include: { socio: true },
         },
-        socios_garantias_socio_garante_idTosocios: true,
+        garante: true,
       },
     });
 
@@ -798,8 +798,8 @@ class GarantiasService {
               socio: true,
             },
           },
-          socios_garantias_socio_garante_idTosocios: true,
-          socios_garantias_socio_garantizado_idTosocios: true,
+          garante: true,
+          socioGarantizado: true,
         },
         orderBy: {
           fecha_creacion: 'desc',

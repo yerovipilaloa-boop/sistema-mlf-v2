@@ -860,7 +860,7 @@ class DashboardSocioService {
       },
       include: {
         credito: { select: { codigo: true } },
-        socios_garantias_socio_garantizado_idTosocios: {
+        socioGarantizado: {
           select: { nombreCompleto: true },
         },
       },
@@ -874,7 +874,7 @@ class DashboardSocioService {
       },
       include: {
         credito: { select: { codigo: true } },
-        socios_garantias_socio_garante_idTosocios: {
+        garante: {
           select: { nombreCompleto: true },
         },
       },
@@ -884,14 +884,14 @@ class DashboardSocioService {
       otorgadas: otorgadas.map(g => ({
         id: g.id,
         creditoCodigo: g.credito?.codigo || '-',
-        nombreGarantizado: g.socios_garantias_socio_garantizado_idTosocios?.nombreCompleto || 'Socio',
+        nombreGarantizado: g.socioGarantizado?.nombreCompleto || 'Socio',
         montoCongelado: g.montoCongelado.toNumber(),
         estado: g.estado,
       })),
       recibidas: recibidas.map(g => ({
         id: g.id,
         creditoCodigo: g.credito?.codigo || '-',
-        nombreGarante: g.socios_garantias_socio_garante_idTosocios?.nombreCompleto || 'Socio',
+        nombreGarante: g.garante?.nombreCompleto || 'Socio',
         montoCongelado: g.montoCongelado.toNumber(),
         estado: g.estado,
       })),
