@@ -655,6 +655,13 @@ class SociosService {
   async depositarAhorro(data: DepositoRetiroDTO, usuarioId?: number): Promise<any> {
     const { socioId, monto, metodo, numeroReferencia, concepto } = data;
 
+    // Debug logging to trace which socio receives the deposit
+    logger.info('=== DEBUG depositarAhorro ===');
+    logger.info(`socioId recibido: ${socioId}`);
+    logger.info(`usuarioId (quien ejecuta): ${usuarioId}`);
+    logger.info(`monto: ${monto}`);
+    logger.info('==============================');
+
     validarMontoPositivoOrThrow(monto, 'Monto de depósito');
 
     const socio = await prisma.socio.findUnique({

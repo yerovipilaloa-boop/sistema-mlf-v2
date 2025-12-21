@@ -1091,12 +1091,20 @@
             </td>
           `;
           // Guardar datos de la solicitud para acceso posterior
+          const extractedSocioId = datos.socioIdSolicitante || datos.socioId || notif.creadaPorId;
+          console.log('DEBUG Solicitud #' + notif.id + ':', {
+            'datos.socioIdSolicitante': datos.socioIdSolicitante,
+            'datos.socioId': datos.socioId,
+            'notif.creadaPorId': notif.creadaPorId,
+            'USANDO socioIdSolicitante': extractedSocioId,
+            'datosAdicionales completo': datos
+          });
           window.solicitudesData.push({
             id: notif.id,
             tipo: notif.tipo,
             socioNombre: notif.socio?.nombreCompleto || 'Desconocido',
             socioCodigo: notif.socio?.codigo || '',
-            socioIdSolicitante: datos.socioIdSolicitante || datos.socioId || notif.creadaPorId,
+            socioIdSolicitante: extractedSocioId,
             monto: monto,
             comprobante: datos.comprobante || '',
             mensaje: notif.mensaje || ''
