@@ -302,13 +302,13 @@ class UtilidadesService {
             tx
           );
 
-          // Get current ahorro to calculate saldo
+          // Get current ahorro AFTER increment (this is the new saldo)
           const socioData = await tx.socio.findUnique({
             where: { id: detalle.socioId },
             select: { ahorroActual: true }
           });
-          const saldoAnterior = socioData?.ahorroActual.toNumber() || 0;
-          const saldoNuevo = saldoAnterior + detalle.montoUtilidad.toNumber();
+          const saldoNuevo = socioData?.ahorroActual.toNumber() || 0;
+          const saldoAnterior = saldoNuevo - detalle.montoUtilidad.toNumber();
 
           await tx.transaccion.create({
             data: {
