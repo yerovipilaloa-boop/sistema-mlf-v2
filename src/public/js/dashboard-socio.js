@@ -2119,6 +2119,53 @@ function toggleTablaAmortizacion() {
 }
 
 /**
+ * Solicitar crédito desde la calculadora
+ * Cierra el modal de calculadora, abre el de solicitud y pre-carga los datos.
+ */
+async function solicitarDesdeCalculadora() {
+  const monto = document.getElementById('calcMonto').value;
+  const plazo = document.getElementById('calcPlazo').value;
+  const metodo = document.getElementById('calcMetodo').value;
+
+  // 1. Cerrar modal calculadora
+  const modalCalc = bootstrap.Modal.getInstance(document.getElementById('modalCalculadora'));
+  if (modalCalc) modalCalc.hide();
+
+  // 2. Abrir modal solicitud
+  const modalReqEl = document.getElementById('modalSolicitarCredito');
+  const modalReq = new bootstrap.Modal(modalReqEl);
+  modalReq.show();
+
+  // 3. Cargar limites
+  await cargarLimiteCredito();
+
+  // 4. Pre-llenar datos
+  setTimeout(() => {
+    const inputMonto = document.getElementById('creditoMonto');
+    const inputPlazo = document.getElementById('creditoPlazo');
+    const inputMetodo = document.getElementById('creditoMetodo');
+
+    if (inputMonto) {
+      inputMonto.value = monto;
+      inputMonto.dispatchEvent(new Event('input'));
+    }
+    if (inputPlazo) {
+      inputPlazo.value = plazo;
+      inputPlazo.dispatchEvent(new Event('change'));
+    }
+    if (inputMetodo) {
+      inputMetodo.value = metodo;
+    }
+
+    // Enfocar en el campo Proposito
+    const propositoEl = document.getElementById('creditoProposito');
+    if (propositoEl) propositoEl.focus();
+
+    showToast('Datos de calculadora cargados. Por favor selecciona el propósito.', 'info');
+  }, 500);
+}
+
+/**
  * Solicitar crédito desde la calculadora (Simulación)
  * Cierra el modal de simulación, abre el de solicitud y pre-carga los datos.
  */
