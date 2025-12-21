@@ -2344,6 +2344,15 @@ async function enviarSolicitudDeposito() {
 
   try {
     const token = localStorage.getItem('token');
+    const socioId = localStorage.getItem('socioId');
+    const nombreCompleto = localStorage.getItem('nombreCompleto');
+
+    console.log('=== DEBUG enviarSolicitudDeposito ===');
+    console.log('socioId en localStorage:', socioId);
+    console.log('nombreCompleto en localStorage:', nombreCompleto);
+    console.log('Token existente:', token ? 'SÍ' : 'NO');
+    console.log('=====================================');
+
     const response = await fetch(`${API_URL}/socios/me/solicitar-deposito`, {
       method: 'POST',
       headers: {

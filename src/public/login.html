@@ -472,6 +472,10 @@
         }
 
         if (data.success && data.data) {
+          // CRITICAL: Clear ALL previous session data before storing new user
+          localStorage.clear();
+          console.log('🔄 localStorage limpiado antes de guardar nuevo usuario');
+
           // Guardar datos en localStorage con prefijo mlf_ para api.js
           localStorage.setItem('mlf_token', data.data.accessToken);
           localStorage.setItem('mlf_user', JSON.stringify(data.data.user));
@@ -483,7 +487,12 @@
           localStorage.setItem('rol', data.data.user.rol);
           localStorage.setItem('nombreCompleto', data.data.user.nombreCompleto);
 
-          console.log('Login exitoso. Usuario:', data.data.user);
+          console.log('✅ Login exitoso. Usuario guardado:', {
+            id: data.data.user.id,
+            usuario: data.data.user.usuario,
+            rol: data.data.user.rol,
+            nombreCompleto: data.data.user.nombreCompleto
+          });
 
           // Mostrar mensaje de éxito
           showAlert(`¡Bienvenido ${data.data.user.nombreCompleto}!`, 'success');

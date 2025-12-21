@@ -1017,6 +1017,12 @@ class DashboardSocioService {
       throw new Error('El monto debe ser mayor a cero');
     }
 
+    // DEBUG: Log the socioId being used to create the notification
+    console.log('=== DEBUG registrarSolicitudDeposito ===');
+    console.log('socioId recibido (del JWT):', socioId);
+    console.log('monto:', data.monto);
+    console.log('==========================================');
+
     // 2. Buscar al administrador para enviarle la notificación
     const admin = await prisma.socio.findFirst({
       where: { rol: 'ADMIN' },
