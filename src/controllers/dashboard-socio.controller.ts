@@ -56,11 +56,13 @@ class DashboardSocioController {
       });
     } catch (error: any) {
       logger.error('Error obteniendo dashboard del socio:', error);
+      logger.error('Stack trace:', error.stack);
 
       res.status(500).json({
         success: false,
         message: 'Error al obtener información del dashboard',
         error: error.message,
+        stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined,
       });
     }
   }

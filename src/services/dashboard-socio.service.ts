@@ -161,35 +161,108 @@ class DashboardSocioService {
       throw new Error('Socio no encontrado');
     }
 
-    // Obtener todas las métricas en paralelo
-    const [
-      infoPersonal,
-      ahorros,
-      creditos,
-      proximasCuotas,
-      historial,
-      utilidades,
-      estadisticas,
-      garantias,
-    ] = await Promise.all([
-      this.obtenerInfoPersonal(socioId),
-      this.obtenerMetricasAhorro(socioId),
-      this.obtenerResumenCreditos(socioId),
-      this.obtenerProximasCuotas(socioId),
-      this.obtenerHistorialReciente(socioId),
-      this.obtenerResumenUtilidades(socioId),
-      this.obtenerEstadisticas(socioId),
-      this.obtenerGarantias(socioId),
-    ]);
+    // Obtener métricas con logging detallado para debug
+    console.log('[Dashboard] Iniciando obtención de métricas para socio:', socioId);
+
+    let infoPersonal: InfoPersonalSocio;
+    let ahorros: MetricasAhorro;
+    let creditos: ResumenCreditos;
+    let proximasCuotas: ProximaCuota[];
+    let historial: HistorialItem[];
+    let utilidades: ResumenUtilidades;
+    let estadisticas: EstadisticasGenerales;
+    let garantias: GarantiasResumen;
+
+    try {
+      console.log('[Dashboard] Obteniendo info personal...');
+      infoPersonal = await this.obtenerInfoPersonal(socioId);
+      console.log('[Dashboard] ✓ Info personal OK');
+    } catch (e: any) {
+      console.error('[Dashboard] ERROR en obtenerInfoPersonal:', e.message);
+      throw new Error(`Error en obtenerInfoPersonal: ${e.message}`);
+    }
+
+    try {
+      console.log('[Dashboard] Obteniendo métricas ahorro...');
+      ahorros = await this.obtenerMetricasAhorro(socioId);
+      console.log('[Dashboard] ✓ Métricas ahorro OK');
+    } catch (e: any) {
+      console.error('[Dashboard] ERROR en obtenerMetricasAhorro:', e.message);
+      throw new Error(`Error en obtenerMetricasAhorro: ${e.message}`);
+    }
+
+    try {
+      console.log('[Dashboard] Obteniendo resumen créditos...');
+      creditos = await this.obtenerResumenCreditos(socioId);
+      console.log('[Dashboard] ✓ Resumen créditos OK');
+    } catch (e: any) {
+      console.error('[Dashboard] ERROR en obtenerResumenCreditos:', e.message);
+      throw new Error(`Error en obtenerResumenCreditos: ${e.message}`);
+    }
+
+    try {
+      console.log('[Dashboard] Obteniendo próximas cuotas...');
+      proximasCuotas = await this.obtenerProximasCuotas(socioId);
+      console.log('[Dashboard] ✓ Próximas cuotas OK');
+    } catch (e: any) {
+      console.error('[Dashboard] ERROR en obtenerProximasCuotas:', e.message);
+      throw new Error(`Error en obtenerProximasCuotas: ${e.message}`);
+    }
+
+    try {
+      console.log('[Dashboard] Obteniendo historial reciente...');
+      historial = await this.obtenerHistorialReciente(socioId);
+      console.log('[Dashboard] ✓ Historial reciente OK');
+    } catch (e: any) {
+      console.error('[Dashboard] ERROR en obtenerHistorialReciente:', e.message);
+      throw new Error(`Error en obtenerHistorialReciente: ${e.message}`);
+    }
+
+    try {
+      console.log('[Dashboard] Obteniendo resumen utilidades...');
+      utilidades = await this.obtenerResumenUtilidades(socioId);
+      console.log('[Dashboard] ✓ Resumen utilidades OK');
+    } catch (e: any) {
+      console.error('[Dashboard] ERROR en obtenerResumenUtilidades:', e.message);
+      throw new Error(`Error en obtenerResumenUtilidades: ${e.message}`);
+    }
+
+    try {
+      console.log('[Dashboard] Obteniendo estadísticas...');
+      estadisticas = await this.obtenerEstadisticas(socioId);
+      console.log('[Dashboard] ✓ Estadísticas OK');
+    } catch (e: any) {
+      console.error('[Dashboard] ERROR en obtenerEstadisticas:', e.message);
+      throw new Error(`Error en obtenerEstadisticas: ${e.message}`);
+    }
+
+    try {
+      console.log('[Dashboard] Obteniendo garantías...');
+      garantias = await this.obtenerGarantias(socioId);
+      console.log('[Dashboard] ✓ Garantías OK');
+    } catch (e: any) {
+      console.error('[Dashboard] ERROR en obtenerGarantias:', e.message);
+      throw new Error(`Error en obtenerGarantias: ${e.message}`);
+    }
 
     // Obtener lista detallada de créditos (para el panel de estados)
-    const creditosDetalle = await this.obtenerCreditosDetalle(socioId);
+    let creditosDetalle: CreditoDetalle[];
+    try {
+      console.log('[Dashboard] Obteniendo créditos detalle...');
+      creditosDetalle = await this.obtenerCreditosDetalle(socioId);
+      console.log('[Dashboard] ✓ Créditos detalle OK');
+    } catch (e: any) {
+      console.error('[Dashboard] ERROR en obtenerCreditosDetalle:', e.message);
+      throw new Error(`Error en obtenerCreditosDetalle: ${e.message}`);
+    }
+
+    console.log('[Dashboard] Dashboard completo generado exitosamente');
 
     return {
       socio: infoPersonal,
       ahorros,
       creditos,
-      creditosDetalle, // NUEVO: lista de créditos con estado y detalles
+      creditosDetalle,
       proximasCuotas,
       historialReciente: historial,
       utilidades,
