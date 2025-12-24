@@ -69,7 +69,7 @@ const requireAdminOrOperator = (req, res, next) => {
     if (!req.user) {
         throw new errors_1.UnauthorizedError('Usuario no autenticado');
     }
-    if (req.user.role !== 'ADMIN' && req.user.role !== 'OPERADOR' && req.user.role !== 'TESORERO') {
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'TESORERO') {
         throw new errors_1.ForbiddenError('Se requieren permisos de administrador u operador');
     }
     next();

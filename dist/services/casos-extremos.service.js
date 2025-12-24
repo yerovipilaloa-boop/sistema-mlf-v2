@@ -252,7 +252,7 @@ class CasosExtremosService {
                 garantiasOtorgadas: {
                     where: {
                         estado: {
-                            in: [types_1.EstadoGarantia.ACTIVA, types_1.EstadoGarantia.EN_LIBERACION],
+                            in: [types_1.EstadoGarantia.ACTIVA],
                         },
                     },
                     include: {

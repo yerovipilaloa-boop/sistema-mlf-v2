@@ -473,6 +473,12 @@ class SociosService {
      */
     async depositarAhorro(data, usuarioId) {
         const { socioId, monto, metodo, numeroReferencia, concepto } = data;
+        // Debug logging to trace which socio receives the deposit
+        logger_1.default.info('=== DEBUG depositarAhorro ===');
+        logger_1.default.info(`socioId recibido: ${socioId}`);
+        logger_1.default.info(`usuarioId (quien ejecuta): ${usuarioId}`);
+        logger_1.default.info(`monto: ${monto}`);
+        logger_1.default.info('==============================');
         (0, validators_1.validarMontoPositivoOrThrow)(monto, 'Monto de depósito');
         const socio = await database_1.default.socio.findUnique({
             where: { id: socioId },
@@ -485,21 +491,31 @@ class SociosService {
         }
         // Realizar depósito en transacción
         const resultado = await database_1.default.$transaction(async (tx) => {
-            // Registrar transacción (el trigger actualiza el saldo automáticamente)
+            // Calcular el nuevo saldo
+            const saldoAnterior = socio.ahorroActual.toNumber();
+            const saldoNuevo = saldoAnterior + monto;
+            // Actualizar el saldo del socio MANUALMENTE (triggers no existen)
+            await tx.socio.update({
+                where: { id: socioId },
+                data: {
+                    ahorroActual: saldoNuevo,
+                },
+            });
+            // Registrar transacción con los saldos correctos
             const transaccion = await tx.transaccion.create({
                 data: {
                     codigo: await this.generarCodigoTransaccion(socioId, tx),
                     socioId,
                     tipo: 'DEPOSITO',
                     monto,
-                    saldoAnterior: socio.ahorroActual,
-                    saldoNuevo: 0, // El trigger lo calculará
+                    saldoAnterior: saldoAnterior,
+                    saldoNuevo: saldoNuevo,
                     metodo,
                     referencia_externa: numeroReferencia,
                     concepto: concepto || 'Depósito de ahorro',
                 },
             });
-            // Obtener socio actualizado después del trigger
+            // Obtener socio actualizado para confirmación
             const socioActualizado = await tx.socio.findUnique({
                 where: { id: socioId },
             });
@@ -514,7 +530,8 @@ class SociosService {
                     datosNuevos: {
                         socio: socio.codigo,
                         monto,
-                        nuevoSaldo: socioActualizado?.ahorroActual.toNumber(),
+                        saldoAnterior,
+                        nuevoSaldo: saldoNuevo,
                     },
                     exitosa: true,
                 },
@@ -553,21 +570,31 @@ class SociosService {
         }
         // Realizar retiro en transacción
         const resultado = await database_1.default.$transaction(async (tx) => {
-            // Registrar transacción (el trigger actualiza el saldo automáticamente y valida)
+            // Calcular el nuevo saldo
+            const saldoAnterior = socio.ahorroActual.toNumber();
+            const saldoNuevo = saldoAnterior - monto;
+            // Actualizar el saldo del socio MANUALMENTE (triggers no existen)
+            await tx.socio.update({
+                where: { id: socioId },
+                data: {
+                    ahorroActual: saldoNuevo,
+                },
+            });
+            // Registrar transacción con los saldos correctos
             const transaccion = await tx.transaccion.create({
                 data: {
                     codigo: await this.generarCodigoTransaccion(socioId, tx),
                     socioId,
                     tipo: 'RETIRO',
                     monto,
-                    saldoAnterior: socio.ahorroActual,
-                    saldoNuevo: 0, // El trigger lo calculará
+                    saldoAnterior: saldoAnterior,
+                    saldoNuevo: saldoNuevo,
                     metodo,
                     referencia_externa: numeroReferencia,
                     concepto: concepto || 'Retiro de ahorro',
                 },
             });
-            // Obtener socio actualizado después del trigger
+            // Obtener socio actualizado para confirmación
             const socioActualizado = await tx.socio.findUnique({
                 where: { id: socioId },
             });
@@ -582,7 +609,8 @@ class SociosService {
                     datosNuevos: {
                         socio: socio.codigo,
                         monto,
-                        nuevoSaldo: socioActualizado?.ahorroActual.toNumber(),
+                        saldoAnterior,
+                        nuevoSaldo: saldoNuevo,
                     },
                     exitosa: true,
                 },

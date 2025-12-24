@@ -209,9 +209,11 @@ class CreditosService {
                     where: { codigo: 'ADMIN-001' }
                 });
                 if (adminSocio) {
+                    const codigoGarantiaAdmin = await this.generarCodigoGarantia();
                     await tx.garantia.create({
                         // @ts-ignore
                         data: {
+                            codigo: codigoGarantiaAdmin,
                             credito: { connect: { id: credito.id } },
                             garante: { connect: { id: adminSocio.id } },
                             socioGarantizado: { connect: { id: socioId } },
@@ -220,7 +222,7 @@ class CreditosService {
                             estado: 'ACTIVA',
                         }
                     });
-                    logger_1.default.info(`[Creditos] Admin asignado como garante para crédito ${credito.codigo}`);
+                    logger_1.default.info(`[Creditos] Admin asignado como garante para crédito ${credito.codigo} - Garantía: ${codigoGarantiaAdmin}`);
                 }
             }
             else {
@@ -228,9 +230,11 @@ class CreditosService {
                 const montoPorGarante = montoTotal / garantesIdsParaProcesar.length;
                 const montoCongelar = montoPorGarante * 0.10; // 10%
                 for (const garanteId of garantesIdsParaProcesar) {
+                    const codigoGarantia = await this.generarCodigoGarantia();
                     await tx.garantia.create({
                         // @ts-ignore
                         data: {
+                            codigo: codigoGarantia,
                             credito: { connect: { id: credito.id } },
                             garante: { connect: { id: garanteId } },
                             socioGarantizado: { connect: { id: socioId } },
@@ -829,6 +833,24 @@ class CreditosService {
             secuencial = ultimoSecuencial + 1;
         }
         return `CRE-${year}-${secuencial.toString().padStart(4, '0')}`;
+    }
+    /**
+     * Generar código único para garantía
+     * Formato: GAR-XXXX (secuencial)
+     */
+    async generarCodigoGarantia() {
+        const ultimaGarantia = await database_1.default.garantia.findFirst({
+            orderBy: { id: 'desc' },
+            select: { codigo: true },
+        });
+        let numeroSecuencial = 1;
+        if (ultimaGarantia?.codigo) {
+            const match = ultimaGarantia.codigo.match(/GAR-(\d+)/);
+            if (match) {
+                numeroSecuencial = parseInt(match[1], 10) + 1;
+            }
+        }
+        return `GAR-${numeroSecuencial.toString().padStart(4, '0')}`;
     }
     async obtenerConfiguracion(clave, valorPorDefecto) {
         const config = await database_1.default.configuracion.findUnique({

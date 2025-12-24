@@ -47,7 +47,8 @@ const aprobarCredito = async (req, res, next) => {
         const credito = await creditos_service_1.default.aprobarCredito({
             creditoId: parseInt(id, 10),
             observaciones,
-        }, req.user?.id);
+            aprobadoPorId: req.user?.id
+        });
         (0, responses_1.sendSuccess)(res, credito, 'Crédito aprobado exitosamente');
     }
     catch (error) {
@@ -86,7 +87,8 @@ const desembolsarCredito = async (req, res, next) => {
             fechaDesembolso: fechaDesembolsoProcessed,
             tasaInteresAnual: parseFloat(tasaInteresAnual),
             observaciones,
-        }, req.user?.id);
+            desembolsadoPorId: req.user?.id
+        });
         (0, responses_1.sendSuccess)(res, resultado, 'Crédito desembolsado exitosamente');
     }
     catch (error) {
@@ -108,7 +110,8 @@ const rechazarCredito = async (req, res, next) => {
         const credito = await creditos_service_1.default.rechazarCredito({
             creditoId: parseInt(id, 10),
             motivoRechazo,
-        }, req.user?.id);
+            rechazadoPorId: req.user?.id
+        });
         (0, responses_1.sendSuccess)(res, credito, 'Crédito rechazado');
     }
     catch (error) {

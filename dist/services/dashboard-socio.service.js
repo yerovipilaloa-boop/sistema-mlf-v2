@@ -27,24 +27,105 @@ class DashboardSocioService {
         if (!socio) {
             throw new Error('Socio no encontrado');
         }
-        // Obtener todas las métricas en paralelo
-        const [infoPersonal, ahorros, creditos, proximasCuotas, historial, utilidades, estadisticas, garantias,] = await Promise.all([
-            this.obtenerInfoPersonal(socioId),
-            this.obtenerMetricasAhorro(socioId),
-            this.obtenerResumenCreditos(socioId),
-            this.obtenerProximasCuotas(socioId),
-            this.obtenerHistorialReciente(socioId),
-            this.obtenerResumenUtilidades(socioId),
-            this.obtenerEstadisticas(socioId),
-            this.obtenerGarantias(socioId),
-        ]);
+        // Obtener métricas con logging detallado para debug
+        console.log('[Dashboard] Iniciando obtención de métricas para socio:', socioId);
+        let infoPersonal;
+        let ahorros;
+        let creditos;
+        let proximasCuotas;
+        let historial;
+        let utilidades;
+        let estadisticas;
+        let garantias;
+        try {
+            console.log('[Dashboard] Obteniendo info personal...');
+            infoPersonal = await this.obtenerInfoPersonal(socioId);
+            console.log('[Dashboard] ✓ Info personal OK');
+        }
+        catch (e) {
+            console.error('[Dashboard] ERROR en obtenerInfoPersonal:', e.message);
+            throw new Error(`Error en obtenerInfoPersonal: ${e.message}`);
+        }
+        try {
+            console.log('[Dashboard] Obteniendo métricas ahorro...');
+            ahorros = await this.obtenerMetricasAhorro(socioId);
+            console.log('[Dashboard] ✓ Métricas ahorro OK');
+        }
+        catch (e) {
+            console.error('[Dashboard] ERROR en obtenerMetricasAhorro:', e.message);
+            throw new Error(`Error en obtenerMetricasAhorro: ${e.message}`);
+        }
+        try {
+            console.log('[Dashboard] Obteniendo resumen créditos...');
+            creditos = await this.obtenerResumenCreditos(socioId);
+            console.log('[Dashboard] ✓ Resumen créditos OK');
+        }
+        catch (e) {
+            console.error('[Dashboard] ERROR en obtenerResumenCreditos:', e.message);
+            throw new Error(`Error en obtenerResumenCreditos: ${e.message}`);
+        }
+        try {
+            console.log('[Dashboard] Obteniendo próximas cuotas...');
+            proximasCuotas = await this.obtenerProximasCuotas(socioId);
+            console.log('[Dashboard] ✓ Próximas cuotas OK');
+        }
+        catch (e) {
+            console.error('[Dashboard] ERROR en obtenerProximasCuotas:', e.message);
+            throw new Error(`Error en obtenerProximasCuotas: ${e.message}`);
+        }
+        try {
+            console.log('[Dashboard] Obteniendo historial reciente...');
+            historial = await this.obtenerHistorialReciente(socioId);
+            console.log('[Dashboard] ✓ Historial reciente OK');
+        }
+        catch (e) {
+            console.error('[Dashboard] ERROR en obtenerHistorialReciente:', e.message);
+            throw new Error(`Error en obtenerHistorialReciente: ${e.message}`);
+        }
+        try {
+            console.log('[Dashboard] Obteniendo resumen utilidades...');
+            utilidades = await this.obtenerResumenUtilidades(socioId);
+            console.log('[Dashboard] ✓ Resumen utilidades OK');
+        }
+        catch (e) {
+            console.error('[Dashboard] ERROR en obtenerResumenUtilidades:', e.message);
+            throw new Error(`Error en obtenerResumenUtilidades: ${e.message}`);
+        }
+        try {
+            console.log('[Dashboard] Obteniendo estadísticas...');
+            estadisticas = await this.obtenerEstadisticas(socioId);
+            console.log('[Dashboard] ✓ Estadísticas OK');
+        }
+        catch (e) {
+            console.error('[Dashboard] ERROR en obtenerEstadisticas:', e.message);
+            throw new Error(`Error en obtenerEstadisticas: ${e.message}`);
+        }
+        try {
+            console.log('[Dashboard] Obteniendo garantías...');
+            garantias = await this.obtenerGarantias(socioId);
+            console.log('[Dashboard] ✓ Garantías OK');
+        }
+        catch (e) {
+            console.error('[Dashboard] ERROR en obtenerGarantias:', e.message);
+            throw new Error(`Error en obtenerGarantias: ${e.message}`);
+        }
         // Obtener lista detallada de créditos (para el panel de estados)
-        const creditosDetalle = await this.obtenerCreditosDetalle(socioId);
+        let creditosDetalle;
+        try {
+            console.log('[Dashboard] Obteniendo créditos detalle...');
+            creditosDetalle = await this.obtenerCreditosDetalle(socioId);
+            console.log('[Dashboard] ✓ Créditos detalle OK');
+        }
+        catch (e) {
+            console.error('[Dashboard] ERROR en obtenerCreditosDetalle:', e.message);
+            throw new Error(`Error en obtenerCreditosDetalle: ${e.message}`);
+        }
+        console.log('[Dashboard] Dashboard completo generado exitosamente');
         return {
             socio: infoPersonal,
             ahorros,
             creditos,
-            creditosDetalle, // NUEVO: lista de créditos con estado y detalles
+            creditosDetalle,
             proximasCuotas,
             historialReciente: historial,
             utilidades,
@@ -631,7 +712,7 @@ class DashboardSocioService {
             },
             include: {
                 credito: { select: { codigo: true } },
-                socios_garantias_socio_garantizado_idTosocios: {
+                socioGarantizado: {
                     select: { nombreCompleto: true },
                 },
             },
@@ -644,7 +725,7 @@ class DashboardSocioService {
             },
             include: {
                 credito: { select: { codigo: true } },
-                socios_garantias_socio_garante_idTosocios: {
+                garante: {
                     select: { nombreCompleto: true },
                 },
             },
@@ -653,14 +734,14 @@ class DashboardSocioService {
             otorgadas: otorgadas.map(g => ({
                 id: g.id,
                 creditoCodigo: g.credito?.codigo || '-',
-                nombreGarantizado: g.socios_garantias_socio_garantizado_idTosocios?.nombreCompleto || 'Socio',
+                nombreGarantizado: g.socioGarantizado?.nombreCompleto || 'Socio',
                 montoCongelado: g.montoCongelado.toNumber(),
                 estado: g.estado,
             })),
             recibidas: recibidas.map(g => ({
                 id: g.id,
                 creditoCodigo: g.credito?.codigo || '-',
-                nombreGarante: g.socios_garantias_socio_garante_idTosocios?.nombreCompleto || 'Socio',
+                nombreGarante: g.garante?.nombreCompleto || 'Socio',
                 montoCongelado: g.montoCongelado.toNumber(),
                 estado: g.estado,
             })),
@@ -709,6 +790,11 @@ class DashboardSocioService {
         if (data.monto <= 0) {
             throw new Error('El monto debe ser mayor a cero');
         }
+        // DEBUG: Log the socioId being used to create the notification
+        console.log('=== DEBUG registrarSolicitudDeposito ===');
+        console.log('socioId recibido (del JWT):', socioId);
+        console.log('monto:', data.monto);
+        console.log('==========================================');
         // 2. Buscar al administrador para enviarle la notificación
         const admin = await database_1.default.socio.findFirst({
             where: { rol: 'ADMIN' },

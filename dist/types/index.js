@@ -19,9 +19,9 @@ var EstadoSocio;
 })(EstadoSocio || (exports.EstadoSocio = EstadoSocio = {}));
 var RolSocio;
 (function (RolSocio) {
-    RolSocio["ADMIN"] = "ADMIN";
-    RolSocio["OPERADOR"] = "OPERADOR";
     RolSocio["SOCIO"] = "SOCIO";
+    RolSocio["TESORERO"] = "TESORERO";
+    RolSocio["ADMIN"] = "ADMIN";
 })(RolSocio || (exports.RolSocio = RolSocio = {}));
 var EtapaSocio;
 (function (EtapaSocio) {
@@ -64,10 +64,8 @@ var EstadoGarantia;
 (function (EstadoGarantia) {
     EstadoGarantia["PENDIENTE"] = "PENDIENTE";
     EstadoGarantia["ACTIVA"] = "ACTIVA";
-    EstadoGarantia["EN_LIBERACION"] = "EN_LIBERACION";
-    EstadoGarantia["LIBERADA"] = "LIBERADA";
     EstadoGarantia["EJECUTADA"] = "EJECUTADA";
-    EstadoGarantia["CANCELADA"] = "CANCELADA";
+    EstadoGarantia["LIBERADA"] = "LIBERADA";
 })(EstadoGarantia || (exports.EstadoGarantia = EstadoGarantia = {}));
 var EstadoLiberacionGarantia;
 (function (EstadoLiberacionGarantia) {

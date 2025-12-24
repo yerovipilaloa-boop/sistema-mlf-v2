@@ -12,9 +12,9 @@ export declare enum EstadoSocio {
     EXPULSADO = "EXPULSADO"
 }
 export declare enum RolSocio {
-    ADMIN = "ADMIN",
-    OPERADOR = "OPERADOR",
-    SOCIO = "SOCIO"
+    SOCIO = "SOCIO",
+    TESORERO = "TESORERO",
+    ADMIN = "ADMIN"
 }
 export declare enum EtapaSocio {
     INICIANTE = 1,
@@ -51,10 +51,8 @@ export declare enum ClasificacionMora {
 export declare enum EstadoGarantia {
     PENDIENTE = "PENDIENTE",
     ACTIVA = "ACTIVA",
-    EN_LIBERACION = "EN_LIBERACION",
-    LIBERADA = "LIBERADA",
     EJECUTADA = "EJECUTADA",
-    CANCELADA = "CANCELADA"
+    LIBERADA = "LIBERADA"
 }
 export declare enum EstadoLiberacionGarantia {
     SOLICITADA = "SOLICITADA",
@@ -161,6 +159,7 @@ export interface SolicitarCreditoDTO {
     tasaInteresAnual?: number;
     observaciones?: string;
     garantesIds?: number[];
+    proposito?: string;
 }
 export interface RegistrarPagoDTO {
     creditoId: number;

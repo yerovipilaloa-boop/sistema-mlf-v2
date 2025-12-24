@@ -43,16 +43,21 @@ interface DetectarFraudeDTO {
 }
 interface RefinanciarCreditoDTO {
     creditoId: number;
-    nuevoPlazoMeses: number;
+    nuevoPlazoMeses?: number;
     nuevaTasaInteres?: number;
-    motivoRefinanciamiento: string;
+    nuevaTasaAnual?: number;
+    porcentajeQuita?: number;
+    motivoRefinanciamiento?: string;
+    motivoRefinanciacion?: string;
     quitas?: number;
+    requiereAprobacion?: boolean;
 }
 interface CondonarDeudaDTO {
     creditoId: number;
-    montoCondonado: number;
+    montoCondonado?: number;
+    porcentajeCondonacion?: number;
     motivo: string;
-    autorizadoPor: number;
+    autorizadoPor: number | string;
 }
 declare class CasosExtremosService {
     /**

@@ -76,7 +76,7 @@ exports.requireAdmin = (0, exports.authorize)(types_1.RolSocio.ADMIN);
 /**
  * Middleware para verificar que el usuario sea ADMIN u OPERADOR
  */
-exports.requireAdminOrOperator = (0, exports.authorize)(types_1.RolSocio.ADMIN, types_1.RolSocio.OPERADOR);
+exports.requireAdminOrOperator = (0, exports.authorize)(types_1.RolSocio.ADMIN, types_1.RolSocio.TESORERO);
 /**
  * Middleware para verificar que el usuario acceda solo a sus propios recursos
  * o que sea ADMIN/OPERADOR
@@ -89,7 +89,7 @@ const requireOwnerOrAdmin = (idParamName = 'id') => {
             }
             const resourceId = parseInt(req.params[idParamName], 10);
             // Admin y Operador pueden acceder a cualquier recurso
-            if (req.user.rol === types_1.RolSocio.ADMIN || req.user.rol === types_1.RolSocio.OPERADOR) {
+            if (req.user.rol === types_1.RolSocio.ADMIN || req.user.rol === types_1.RolSocio.TESORERO) {
                 return next();
             }
             // Usuario normal solo puede acceder a sus propios recursos

@@ -47,6 +47,39 @@ app.use((0, morgan_1.default)(morganFormat, {
     },
 }));
 // ============================================================================
+// ARCHIVOS ESTÁTICOS DEL FRONTEND
+// ============================================================================
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
+// Servir archivos estáticos desde la carpeta public
+// En producción, __dirname es dist/, así que public debe estar en dist/public
+const publicPath = path_1.default.join(__dirname, 'public');
+// Debug: Log del path de archivos estáticos
+console.log('📁 Static files path:', publicPath);
+console.log('📁 __dirname:', __dirname);
+console.log('📁 Public folder exists:', fs_1.default.existsSync(publicPath));
+if (fs_1.default.existsSync(publicPath)) {
+    console.log('📁 Contents:', fs_1.default.readdirSync(publicPath));
+}
+app.use(express_1.default.static(publicPath));
+// Servir login.html por defecto en la raíz
+app.get('/', (req, res) => {
+    const loginPath = path_1.default.join(publicPath, 'login.html');
+    console.log('📄 Serving login.html from:', loginPath);
+    console.log('📄 File exists:', fs_1.default.existsSync(loginPath));
+    if (fs_1.default.existsSync(loginPath)) {
+        res.sendFile(loginPath);
+    }
+    else {
+        res.status(200).json({
+            message: 'API Sistema MLF - Frontend not found',
+            publicPath: publicPath,
+            loginPath: loginPath,
+            dirExists: fs_1.default.existsSync(publicPath),
+        });
+    }
+});
+// ============================================================================
 // RUTAS DE SALUD Y ESTADO
 // ============================================================================
 app.get('/health', (req, res) => {
@@ -57,7 +90,8 @@ app.get('/health', (req, res) => {
         environment: env_1.default.nodeEnv,
     });
 });
-app.get('/', (req, res) => {
+// API info endpoint (movido a /api para no conflictar con frontend)
+app.get('/api', (req, res) => {
     res.status(200).json({
         message: 'API Sistema MLF - My Libertad Financiera',
         version: env_1.default.apiVersion,

@@ -567,17 +567,17 @@ class DashboardService {
             // Pagos en el período
             const pagos = await database_1.prisma.pago.findMany({
                 where: {
-                    fecha: {
+                    fechaPago: {
                         gte: fechaInicio,
                         lte: fechaFin,
                     },
                 },
                 select: {
-                    monto: true,
-                    fecha: true,
+                    monto_pago: true,
+                    fechaPago: true,
                 },
             });
-            const totalPagos = pagos.reduce((acc, p) => acc + p.monto.toNumber(), 0);
+            const totalPagos = pagos.reduce((acc, p) => acc + p.monto_pago.toNumber(), 0);
             // Créditos desembolsados en el período
             const creditosDesembolsados = await database_1.prisma.credito.count({
                 where: {
@@ -590,7 +590,7 @@ class DashboardService {
             // Nuevos socios en el período
             const nuevosSocios = await database_1.prisma.socio.count({
                 where: {
-                    fechaIngreso: {
+                    fechaRegistro: {
                         gte: fechaInicio,
                         lte: fechaFin,
                     },

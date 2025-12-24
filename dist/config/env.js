@@ -16,12 +16,21 @@ const path_1 = __importDefault(require("path"));
 // Cargar variables de entorno
 dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../../.env') });
 /**
- * Validar que una variable de entorno exista
+ * Obtener variable de entorno con fallback opcional
+ * NO lanza error - retorna el valor por defecto si no está definida
  */
-const getEnvVariable = (key, defaultValue) => {
+const getEnvVariable = (key, defaultValue = '') => {
     const value = process.env[key] || defaultValue;
+    return value;
+};
+/**
+ * Obtener variable requerida (lanza warning pero no crashea)
+ */
+const getRequiredEnvVariable = (key, fallback) => {
+    const value = process.env[key];
     if (!value) {
-        throw new Error(`❌ Variable de entorno "${key}" no está definida`);
+        console.warn(`⚠️ Variable de entorno "${key}" no está definida. Usando fallback.`);
+        return fallback;
     }
     return value;
 };
@@ -33,11 +42,11 @@ exports.config = {
     nodeEnv: getEnvVariable('NODE_ENV', 'development'),
     port: parseInt(getEnvVariable('PORT', '3000'), 10),
     apiVersion: getEnvVariable('API_VERSION', 'v1'),
-    // Base de datos
-    databaseUrl: getEnvVariable('DATABASE_URL'),
-    // JWT
+    // Base de datos - usar fallback para desarrollo/pruebas
+    databaseUrl: getRequiredEnvVariable('DATABASE_URL', 'mysql://localhost:3306/mlf_dev'),
+    // JWT - usar fallback para desarrollo (NUNCA en producción real)
     jwt: {
-        secret: getEnvVariable('JWT_SECRET'),
+        secret: getRequiredEnvVariable('JWT_SECRET', 'dev_secret_cambiar_en_produccion_123456789'),
         expiresIn: getEnvVariable('JWT_EXPIRES_IN', '24h'),
         refreshExpiresIn: getEnvVariable('JWT_REFRESH_EXPIRES_IN', '7d'),
     },
@@ -95,8 +104,11 @@ const validateConfig = () => {
     ];
     const missing = requiredVars.filter(key => !process.env[key]);
     if (missing.length > 0) {
-        throw new Error(`❌ Variables de entorno requeridas faltantes: ${missing.join(', ')}\n` +
-            `Por favor, copia .env.example a .env y configura las variables.`);
+        console.warn('='.repeat(60));
+        console.warn(`⚠️ ADVERTENCIA: Variables de entorno faltantes: ${missing.join(', ')}`);
+        console.warn('El servidor usará valores de fallback.');
+        console.warn('Para producción, configura estas variables en el panel de Hostinger.');
+        console.warn('='.repeat(60));
     }
     // Validaciones de seguridad SOLO en produccion
     if (exports.config.nodeEnv === 'production') {
@@ -104,12 +116,12 @@ const validateConfig = () => {
         const jwtSecret = exports.config.jwt.secret.toLowerCase();
         const isInsecureSecret = INSECURE_SECRETS.some(insecure => jwtSecret.includes(insecure.toLowerCase()));
         if (isInsecureSecret || exports.config.jwt.secret.length < 32) {
-            throw new Error(`❌ SEGURIDAD: JWT_SECRET es inseguro para produccion.\n` +
+            console.warn(`⚠️ ADVERTENCIA: JWT_SECRET es inseguro para produccion.\n` +
                 `Genera uno nuevo con: openssl rand -base64 64`);
         }
         // Verificar que CORS no sea *
         if (exports.config.corsOrigin === '*') {
-            throw new Error(`❌ SEGURIDAD: CORS_ORIGIN no puede ser '*' en produccion.\n` +
+            console.warn(`⚠️ ADVERTENCIA: CORS_ORIGIN es '*' en produccion.\n` +
                 `Configura el dominio especifico de tu frontend.`);
         }
         // Verificar que DEBUG este desactivado

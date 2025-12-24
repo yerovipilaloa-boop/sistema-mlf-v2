@@ -165,7 +165,7 @@ class GarantiasService {
                 credito: {
                     include: { socio: true },
                 },
-                socios_garantias_socio_garante_idTosocios: true,
+                garante: true,
             },
         });
         // Congelar ahorro del garante (RN-GAR-004)
@@ -570,8 +570,8 @@ class GarantiasService {
                             socio: true,
                         },
                     },
-                    socios_garantias_socio_garante_idTosocios: true,
-                    socios_garantias_socio_garantizado_idTosocios: true,
+                    garante: true,
+                    socioGarantizado: true,
                 },
                 orderBy: {
                     fecha_creacion: 'desc',

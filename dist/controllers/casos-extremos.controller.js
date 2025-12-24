@@ -17,9 +17,12 @@
  * @author Sistema MLF
  * @version 1.0.0
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.obtenerHistorialCasosExtremos = exports.procesarCatastrofe = exports.condonarDeuda = exports.refinanciarCredito = exports.detectarFraude = exports.procesarFallecimientoGarante = exports.procesarFallecimientoDeudor = void 0;
-const casos_extremos_service_1 = require("../services/casos-extremos.service");
+const casos_extremos_service_1 = __importDefault(require("../services/casos-extremos.service"));
 const api_response_1 = require("../utils/api-response");
 /**
  * Procesar fallecimiento de deudor
@@ -31,7 +34,7 @@ const procesarFallecimientoDeudor = async (req, res, next) => {
         if (!socioId || !creditoId || !fechaFallecimiento || !certificadoDefuncion) {
             throw new Error('Se requiere: socioId, creditoId, fechaFallecimiento y certificadoDefuncion');
         }
-        const resultado = await casos_extremos_service_1.casosExtremosService.procesarFallecimientoDeudor({
+        const resultado = await casos_extremos_service_1.default.procesarFallecimientoDeudor({
             socioId: parseInt(socioId, 10),
             creditoId: parseInt(creditoId, 10),
             fechaFallecimiento: new Date(fechaFallecimiento),
@@ -55,7 +58,7 @@ const procesarFallecimientoGarante = async (req, res, next) => {
         if (!garanteId || !fechaFallecimiento || !certificadoDefuncion) {
             throw new Error('Se requiere: garanteId, fechaFallecimiento y certificadoDefuncion');
         }
-        const resultado = await casos_extremos_service_1.casosExtremosService.procesarFallecimientoGarante({
+        const resultado = await casos_extremos_service_1.default.procesarFallecimientoGarante({
             garanteId: parseInt(garanteId, 10),
             fechaFallecimiento: new Date(fechaFallecimiento),
             certificadoDefuncion,
@@ -78,7 +81,7 @@ const detectarFraude = async (req, res, next) => {
         if (!socioId || !tipo || !descripcion) {
             throw new Error('Se requiere: socioId, tipo y descripcion');
         }
-        const resultado = await casos_extremos_service_1.casosExtremosService.detectarFraude({
+        const resultado = await casos_extremos_service_1.default.detectarFraude({
             socioId: parseInt(socioId, 10),
             tipo,
             descripcion,
@@ -103,7 +106,7 @@ const refinanciarCredito = async (req, res, next) => {
         if (!nuevoPlazoMeses && !nuevaTasaAnual && !porcentajeQuita) {
             throw new Error('Se requiere al menos: nuevoPlazoMeses, nuevaTasaAnual o porcentajeQuita');
         }
-        const resultado = await casos_extremos_service_1.casosExtremosService.refinanciarCredito({
+        const resultado = await casos_extremos_service_1.default.refinanciarCredito({
             creditoId: parseInt(id, 10),
             nuevoPlazoMeses: nuevoPlazoMeses ? parseInt(nuevoPlazoMeses, 10) : undefined,
             nuevaTasaAnual: nuevaTasaAnual ? parseFloat(nuevaTasaAnual) : undefined,
@@ -131,7 +134,7 @@ const condonarDeuda = async (req, res, next) => {
         if (parseFloat(porcentajeCondonacion) <= 0 || parseFloat(porcentajeCondonacion) > 100) {
             throw new Error('El porcentaje debe estar entre 0 y 100');
         }
-        const resultado = await casos_extremos_service_1.casosExtremosService.condonarDeuda({
+        const resultado = await casos_extremos_service_1.default.condonarDeuda({
             creditoId: parseInt(creditoId, 10),
             porcentajeCondonacion: parseFloat(porcentajeCondonacion),
             motivo,
@@ -157,7 +160,7 @@ const procesarCatastrofe = async (req, res, next) => {
         if (!Array.isArray(sociosAfectadosIds) || sociosAfectadosIds.length === 0) {
             throw new Error('sociosAfectadosIds debe ser un array con al menos 1 socio');
         }
-        const resultado = await casos_extremos_service_1.casosExtremosService.procesarCatastrofe({
+        const resultado = await casos_extremos_service_1.default.procesarCatastrofe({
             tipo,
             descripcion,
             fechaEvento: new Date(fechaEvento),
@@ -181,7 +184,7 @@ const obtenerHistorialCasosExtremos = async (req, res, next) => {
         if (!socioId) {
             throw new Error('Se requiere socioId');
         }
-        const historial = await casos_extremos_service_1.casosExtremosService.obtenerHistorialCasosExtremos(parseInt(socioId, 10));
+        const historial = await casos_extremos_service_1.default.obtenerHistorialCasosExtremos(parseInt(socioId, 10));
         (0, api_response_1.sendSuccess)(res, historial, 'Historial de casos extremos obtenido exitosamente');
     }
     catch (error) {

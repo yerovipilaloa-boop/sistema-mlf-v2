@@ -14,9 +14,10 @@ interface AprobarCreditoDTO {
 }
 interface DesembolsarCreditoDTO {
     creditoId: number;
-    desembolsadoPorId: number;
+    desembolsadoPorId?: number;
     fechaDesembolso?: Date;
     tasaInteresAnual?: number;
+    observaciones?: string;
 }
 interface RechazarCreditoDTO {
     creditoId: number;
@@ -82,6 +83,11 @@ declare class CreditosService {
      */
     private calcularSumaCreditosActivos;
     private generarCodigoCredito;
+    /**
+     * Generar código único para garantía
+     * Formato: GAR-XXXX (secuencial)
+     */
+    private generarCodigoGarantia;
     private obtenerConfiguracion;
 }
 declare const _default: CreditosService;

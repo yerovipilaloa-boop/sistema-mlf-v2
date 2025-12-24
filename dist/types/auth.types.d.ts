@@ -9,7 +9,7 @@ import { Request } from 'express';
 /**
  * Roles de usuario en el sistema
  */
-export type UserRole = 'ADMIN' | 'OPERADOR' | 'SOCIO' | 'TESORERO';
+export type UserRole = 'ADMIN' | 'TESORERO' | 'SOCIO';
 /**
  * Payload del JWT
  */
