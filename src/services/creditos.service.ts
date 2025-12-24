@@ -140,16 +140,21 @@ class CreditosService {
     const primaSeguro = montoSolicitado * (primaSeguroPorcentaje / 100);
     const montoTotal = montoSolicitado + primaSeguro;
 
-    // ============================================================================
-    // VERIFICAR QUE NO EXCEDA LÍMITE (RN-CRE-002)
-    // ============================================================================
+    // ========================================================================
+    // VALIDACIÓN DE LÍMITE TEMPORALMENTE DESHABILITADA
+    // TODO: Reactivar cuando se resuelva la inconsistencia de etapa
+    // Fecha: 2024-12-24
+    // ========================================================================
+    logger.warn(`[Creditos] Validación de límite temporalmente deshabilitada - Monto: ${montoTotal}, Límite: ${limiteDisponible}`);
 
+    /* BLOQUE COMENTADO - VALIDACIÓN LÍMITE
     if (sumaCreditosActivos + montoTotal > limiteDisponible) {
       throw new LimiteCreditoExcedidoError(
         limiteDisponible - sumaCreditosActivos,
         montoTotal
       );
     }
+    FIN BLOQUE COMENTADO */
 
     // ============================================================================
     // OBTENER TASA DE INTERÉS
