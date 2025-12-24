@@ -236,6 +236,14 @@ class CreditosService {
         },
       });
 
+      // ========================================================================
+      // GARANTÍAS TEMPORALMENTE DESHABILITADAS
+      // TODO: Reactivar cuando se resuelva el problema del campo 'codigo'
+      // Fecha: 2024-12-24
+      // ========================================================================
+      logger.warn(`[Creditos] Garantías temporalmente deshabilitadas para crédito ${credito.codigo}`);
+
+      /* BLOQUE COMENTADO - GARANTÍAS
       // 4. Crear garantías (Lógica de Garantes)
       // Si no se envían garantes, se intenta asignar al Admin por defecto
       const garantesIdsParaProcesar = garantesIds && garantesIds.length > 0 ? garantesIds : [];
@@ -291,6 +299,7 @@ class CreditosService {
           });
         }
       }
+      FIN BLOQUE COMENTADO */
 
       return credito;
     });
