@@ -340,16 +340,22 @@ class CreditosService {
       );
     }
 
-    // Verificar nuevamente el límite (por si cambió el ahorro)
+    // ========================================================================
+    // VALIDACIÓN DE LÍMITE TEMPORALMENTE DESHABILITADA (aprobarCredito)
+    // TODO: Reactivar cuando se confirme que funciona correctamente
+    // ========================================================================
     const limiteDisponible = await this.calcularLimiteDisponible(credito.socio);
     const sumaCreditosActivos = await this.calcularSumaCreditosActivos(credito.socioId);
+    logger.warn(`[Creditos] Aprobando con límite deshabilitado - Monto: ${credito.montoTotal}, Límite: ${limiteDisponible}`);
 
+    /* BLOQUE COMENTADO - VALIDACIÓN LÍMITE APROBAR
     if (sumaCreditosActivos + credito.montoTotal.toNumber() > limiteDisponible) {
       throw new LimiteCreditoExcedidoError(
         limiteDisponible - sumaCreditosActivos,
         credito.montoTotal.toNumber()
       );
     }
+    FIN BLOQUE COMENTADO */
 
     // Aprobar en transacción
     await prisma.$transaction(async (tx) => {

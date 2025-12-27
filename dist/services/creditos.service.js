@@ -294,12 +294,21 @@ class CreditosService {
         if (credito.estado !== 'SOLICITADO') {
             throw new errors_1.CreditoBusinessError(`El crédito debe estar en estado SOLICITADO para ser aprobado`);
         }
-        // Verificar nuevamente el límite (por si cambió el ahorro)
+        // ========================================================================
+        // VALIDACIÓN DE LÍMITE TEMPORALMENTE DESHABILITADA (aprobarCredito)
+        // TODO: Reactivar cuando se confirme que funciona correctamente
+        // ========================================================================
         const limiteDisponible = await this.calcularLimiteDisponible(credito.socio);
         const sumaCreditosActivos = await this.calcularSumaCreditosActivos(credito.socioId);
+        logger_1.default.warn(`[Creditos] Aprobando con límite deshabilitado - Monto: ${credito.montoTotal}, Límite: ${limiteDisponible}`);
+        /* BLOQUE COMENTADO - VALIDACIÓN LÍMITE APROBAR
         if (sumaCreditosActivos + credito.montoTotal.toNumber() > limiteDisponible) {
-            throw new errors_1.LimiteCreditoExcedidoError(limiteDisponible - sumaCreditosActivos, credito.montoTotal.toNumber());
+          throw new LimiteCreditoExcedidoError(
+            limiteDisponible - sumaCreditosActivos,
+            credito.montoTotal.toNumber()
+          );
         }
+        FIN BLOQUE COMENTADO */
         // Aprobar en transacción
         await database_1.default.$transaction(async (tx) => {
             // 1. Actualizar estado
