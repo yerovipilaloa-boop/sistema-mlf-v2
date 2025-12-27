@@ -316,8 +316,12 @@
 
   // Rechazar crédito
   window.rechazarCredito = async function (creditoId) {
-    const confirmacion = await customConfirm('¿Estás seguro de que deseas RECHAZAR este crédito? Esta acción no se puede deshacer.', '❌ Rechazar Crédito');
-    if (!confirmacion) return;
+    console.log('[Creditos] rechazarCredito llamada - creditoId:', creditoId);
+
+    if (!confirm('¿Estás seguro de que deseas RECHAZAR este crédito? Esta acción no se puede deshacer.')) {
+      console.log('[Creditos] Usuario canceló el rechazo');
+      return;
+    }
 
     const motivoRechazo = prompt('Motivo del rechazo (obligatorio):');
     if (!motivoRechazo || motivoRechazo.trim() === '') {
@@ -327,10 +331,12 @@
 
     try {
       showLoading();
+      console.log('[Creditos] Llamando api.rechazarCredito...');
       await api.rechazarCredito(creditoId, motivoRechazo);
       alert('Crédito rechazado exitosamente');
       loadCreditos();
     } catch (error) {
+      console.error('[Creditos] Error al rechazar:', error);
       alert('Error al rechazar crédito: ' + getErrorMessage(error));
     } finally {
       hideLoading();
