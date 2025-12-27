@@ -1352,7 +1352,7 @@
       }
 
       container.innerHTML = '<p>Cargando módulo de créditos...</p>';
-      loadScript('../js/creditos.js', () => {
+      loadScript('../js/creditos.js?v=1.1.0', () => {
         modulosInicializados.creditos = true;
         if (typeof window.initCreditosModule === 'function') {
           window.initCreditosModule();
