@@ -936,24 +936,28 @@ class CreditosService {
 
     // Determinar multiplicador según etapa
     if (socio.etapaActual === 1) {
-      // Etapa Iniciante: 125% → 200%
+      // Etapa Iniciante: 125% → 200% (incrementos de 25%)
       if (socio.creditosEtapaActual === 0) multiplicador = 1.25;
       else if (socio.creditosEtapaActual === 1) multiplicador = 1.5;
       else if (socio.creditosEtapaActual === 2) multiplicador = 1.75;
       else multiplicador = 2.0;
     } else if (socio.etapaActual === 2) {
-      multiplicador = 2.0;
+      // Etapa Regular: 200% → 275% (empieza en el doble, sigue subiendo)
+      if (socio.creditosEtapaActual === 0) multiplicador = 2.0;
+      else if (socio.creditosEtapaActual === 1) multiplicador = 2.25;
+      else if (socio.creditosEtapaActual === 2) multiplicador = 2.5;
+      else multiplicador = 2.75;
     } else if (socio.etapaActual === 3) {
       multiplicador = 3.0;
     }
 
     const limitePorAhorros = ahorroTotal * multiplicador;
 
-    // Topes por etapa (Hard caps)
+    // Topes por etapa (Hard caps) - Ajustados para permitir crecimiento
     const limitesPorEtapa: { [key: number]: number } = {
       1: 500,
-      2: 2000,
-      3: 10000,
+      2: 10000,  // Aumentado de 2000 a 10000
+      3: 50000,  // Aumentado de 10000 a 50000
     };
     const topeEtapa = limitesPorEtapa[socio.etapaActual] || 500;
 
