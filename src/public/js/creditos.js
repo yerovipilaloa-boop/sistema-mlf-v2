@@ -183,7 +183,8 @@
     let html = '';
     if (credito.estado === 'SOLICITADO') {
       html += `<button class="btn btn-sm btn-info" onclick="window.editarCredito(${credito.id})" style="margin-right: 5px;">Editar</button>`;
-      html += `<button class="btn btn-sm btn-success" onclick="window.aprobarCredito(${credito.id})">Aprobar</button>`;
+      html += `<button class="btn btn-sm btn-success" onclick="window.aprobarCredito(${credito.id})" style="margin-right: 5px;">Aprobar</button>`;
+      html += `<button class="btn btn-sm btn-danger" onclick="window.rechazarCredito(${credito.id})">Rechazar</button>`;
     } else if (credito.estado === 'APROBADO') {
       html += `<button class="btn btn-sm btn-success" onclick="window.desembolsarCredito(${credito.id})">Desembolsar</button>`;
     }
@@ -308,6 +309,29 @@
       loadCreditos();
     } catch (error) {
       alert('Error al aprobar crédito: ' + getErrorMessage(error));
+    } finally {
+      hideLoading();
+    }
+  };
+
+  // Rechazar crédito
+  window.rechazarCredito = async function (creditoId) {
+    const confirmacion = await customConfirm('¿Estás seguro de que deseas RECHAZAR este crédito? Esta acción no se puede deshacer.', '❌ Rechazar Crédito');
+    if (!confirmacion) return;
+
+    const motivoRechazo = prompt('Motivo del rechazo (obligatorio):');
+    if (!motivoRechazo || motivoRechazo.trim() === '') {
+      alert('Debes proporcionar un motivo de rechazo');
+      return;
+    }
+
+    try {
+      showLoading();
+      await api.rechazarCredito(creditoId, motivoRechazo);
+      alert('Crédito rechazado exitosamente');
+      loadCreditos();
+    } catch (error) {
+      alert('Error al rechazar crédito: ' + getErrorMessage(error));
     } finally {
       hideLoading();
     }

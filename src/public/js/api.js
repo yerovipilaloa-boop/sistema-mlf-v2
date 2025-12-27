@@ -275,6 +275,16 @@ class MLFApi {
     return this.handleResponse(response);
   }
 
+  async rechazarCredito(id, motivoRechazo) {
+    const response = await fetch(`${API_BASE_URL}/creditos/${id}/rechazar`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ motivoRechazo }),
+    });
+
+    return this.handleResponse(response);
+  }
+
   async desembolsarCredito(id, data) {
     const response = await fetch(`${API_BASE_URL}/creditos/${id}/desembolsar`, {
       method: 'POST',
